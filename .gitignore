@@ -2,3 +2,4 @@ venv
 .idea
 .env
 config.py
+utils/database.db
