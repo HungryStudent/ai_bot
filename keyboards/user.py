@@ -5,7 +5,8 @@ from aiogram.utils.callback_data import CallbackData
 from utils.pay import get_pay_url
 
 menu = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("Задать вопрос"),
-                                                                  KeyboardButton("Сгенерировать изображение"))
+                                                                  KeyboardButton("Сгенерировать изображение"),
+                                                                  KeyboardButton("Поддержка"))
 
 cancel = ReplyKeyboardMarkup(resize_keyboard=True, row_width=1).add(KeyboardButton("Отмена"))
 

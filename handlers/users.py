@@ -18,6 +18,10 @@ async def start_message(message: Message, state: FSMContext):
     await message.answer("Здравствуйте, вам начислено 10 запросов", reply_markup=user_kb.menu)
 
 
+@dp.message_handler(text="Поддержка")
+async def support(message: Message):
+    await message.answer("По всем вопросам: @efanov_n")
+
 @dp.message_handler(state="*", text="Отмена")
 async def cancel(message: Message, state: FSMContext):
     await state.finish()
