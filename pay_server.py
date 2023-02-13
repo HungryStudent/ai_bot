@@ -1,3 +1,4 @@
+from aiogram.utils.exceptions import ChatNotFound
 from fastapi import FastAPI, Request, HTTPException
 
 from keyboards import admin as admin_kb
@@ -14,7 +15,10 @@ app = FastAPI()
 @app.get('/api/pay/freekassa')
 async def check_pay_freekassa(MERCHANT_ORDER_ID):
     db.add_tokens(MERCHANT_ORDER_ID)
-    await bot.send_message(MERCHANT_ORDER_ID, "Оплата прошла успешно, вам начислены токены")
+    try:
+        await bot.send_message(MERCHANT_ORDER_ID, "Оплата прошла успешно, вам начислены токены")
+    except ChatNotFound:
+        pass
     return 'YES'
 
 
