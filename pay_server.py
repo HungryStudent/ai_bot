@@ -21,7 +21,7 @@ async def check_pay_freekassa(MERCHANT_ORDER_ID):
         pass
     except Exception as e:
         await bot.send_message(796644977, e)
-        return 'YES'
+    return 'YES'
 
 
 if __name__ == "__main__":
