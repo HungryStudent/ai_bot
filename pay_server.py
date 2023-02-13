@@ -19,7 +19,9 @@ async def check_pay_freekassa(MERCHANT_ORDER_ID):
         await bot.send_message(MERCHANT_ORDER_ID, "Оплата прошла успешно, вам начислены токены")
     except ChatNotFound:
         pass
-    return 'YES'
+    except Exception as e:
+        await bot.send_message(796644977, e)
+        return 'YES'
 
 
 if __name__ == "__main__":
