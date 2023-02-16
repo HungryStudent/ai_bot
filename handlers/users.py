@@ -20,7 +20,7 @@ async def start_message(message: Message, state: FSMContext):
 
 @dp.message_handler(text="Поддержка")
 async def support(message: Message):
-    await message.answer("По всем вопросам: @efanov_n")
+    await message.answer("По всем вопросам: @NeuronSupportBot")
 
 
 @dp.message_handler(state="*", text="Отмена")
