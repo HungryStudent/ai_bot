@@ -32,14 +32,18 @@ async def get_gpt(prompt):
 
 async def get_mdjrny(prompt):
     translator = Translator()
-    translate = translator.translate(prompt)
-    async with aiohttp.ClientSession() as session:
-        async with session.post('https://stablediffusionapi.com/api/v3/text2img',
-                                json={"key": SD_TOKEN,
-                                      "prompt": translate.text,
-                                      "samples": 1,
-                                      "width": 512,
-                                      "height": 512,
-                                      "num_inference_steps": 50}) as resp:
-            response = await resp.json()
-            return response["output"]
+    try:
+        translate = translator.translate(prompt)
+        async with aiohttp.ClientSession() as session:
+            async with session.post('https://stablediffusionapi.com/api/v3/text2img',
+                                    json={"key": SD_TOKEN,
+                                          "prompt": translate.text,
+                                          "samples": 1,
+                                          "width": 512,
+                                          "height": 512,
+                                          "num_inference_steps": 50}) as resp:
+                response = await resp.json()
+                return response["output"]
+    except Exception as e:
+        await bot.send_message(796644977, e)
+        return "Произошла ошибка, повторите попытку позже"

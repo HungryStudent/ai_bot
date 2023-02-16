@@ -66,4 +66,7 @@ async def mdjrny_prompt(message: Message, state: FSMContext):
     await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
     await state.finish()
     photo_url = await ai.get_mdjrny(message.text)
-    await message.answer_photo(photo_url[0])
+    if photo_url == "Произошла ошибка, повторите попытку позже":
+        await message.answer(photo_url)
+    else:
+        await message.answer_photo(photo_url[0])
