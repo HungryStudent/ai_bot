@@ -1,6 +1,6 @@
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ChatActions
 
 import keyboards.admin as admin_kb
 from states import user as states
@@ -22,6 +22,7 @@ async def start_message(message: Message, state: FSMContext):
 async def support(message: Message):
     await message.answer("По всем вопросам: @efanov_n")
 
+
 @dp.message_handler(state="*", text="Отмена")
 async def cancel(message: Message, state: FSMContext):
     await state.finish()
@@ -42,7 +43,7 @@ async def ask_question(message: Message):
 async def gen_img(message: Message):
     user = db.get_user(message.from_user.id)
     if user["tokens"] == 0:
-        await message.answer("У вас закончились запросы, купите их")
+        await message.answer("У вас закончились запросы, купите их", reply_markup=user_kb.get_pay(message.from_user.id))
         return
     await message.answer("Введите описание фото", reply_markup=user_kb.cancel)
     await states.EnterPromt.mdjrny_prompt.set()
@@ -52,6 +53,7 @@ async def gen_img(message: Message):
 async def gpt_prompt(message: Message, state: FSMContext):
     db.remove_token(message.from_user.id)
     await message.answer("Ожидайте, генерируется ответ", reply_markup=user_kb.menu)
+    await message.answer_chat_action(ChatActions.TYPING)
     await state.finish()
     result = await ai.get_gpt(message.text)
     await message.answer(result)
@@ -61,6 +63,7 @@ async def gpt_prompt(message: Message, state: FSMContext):
 async def mdjrny_prompt(message: Message, state: FSMContext):
     db.remove_token(message.from_user.id)
     await message.answer("Ожидайте, изображение генерируется", reply_markup=user_kb.menu)
+    await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
     await state.finish()
     photo_url = await ai.get_mdjrny(message.text)
     await message.answer_photo(photo_url[0])

@@ -1,14 +1,9 @@
 from googletrans import Translator
-import replicate
 import aiohttp
 import asyncio
 
-from config import OPENAPI_TOKEN, REPLICATE_API_TOKEN
+from config import OPENAPI_TOKEN, SD_TOKEN
 from create_bot import bot
-
-client = replicate.Client(api_token=REPLICATE_API_TOKEN)
-model = client.models.get("tstramer/midjourney-diffusion")
-version = model.versions.get("436b051ebd8f68d23e83d22de5e198e0995357afef113768c20f0b6fcef23c8b")
 
 
 async def get_gpt(prompt):
@@ -38,16 +33,13 @@ async def get_gpt(prompt):
 async def get_mdjrny(prompt):
     translator = Translator()
     translate = translator.translate(prompt)
-    inputs = {
-        'prompt': translate.text,
-        'prompt_strength': 0.8,
-        'num_outputs': 1,
-        'num_inference_steps': 50,
-        'guidance_scale': 7.5,
-        'scheduler': "DPMSolverMultistep",
-    }
-    prediction = client.predictions.create(version=version, input=inputs)
-    while prediction.status != "succeeded":
-        await asyncio.sleep(5)
-        prediction.reload()
-    return prediction.output
+    async with aiohttp.ClientSession() as session:
+        async with session.post('https://stablediffusionapi.com/api/v3/text2img',
+                                json={"key": SD_TOKEN,
+                                      "prompt": translate.text,
+                                      "samples": 1,
+                                      "width": 512,
+                                      "height": 512,
+                                      "num_inference_steps": 50}) as resp:
+            response = await resp.json()
+            return response["output"]
