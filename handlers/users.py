@@ -123,8 +123,8 @@ async def gpt_prompt(message: Message, state: FSMContext):
     await message.answer("Ожидайте, генерирую ответ..🕙", reply_markup=user_kb.menu)
     await message.answer_chat_action(ChatActions.TYPING)
     await state.finish()
-    # result = await ai.get_gpt(message.text)
-    # await message.answer(result)
+    result = await ai.get_gpt(message.text)
+    await message.answer(result)
     user = db.get_user(message.from_user.id)
     if user["free_chatgpt"] > 0:
         db.remove_chatgpt(message.from_user.id)
