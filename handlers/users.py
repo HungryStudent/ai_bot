@@ -64,6 +64,32 @@ async def enter_other_amount(call: CallbackQuery):
     await states.EnterAmount.enter_amount.set()
 
 
+@dp.message_handler(state="*", text="💬Текст")
+async def ask_question(message: Message, state: FSMContext):
+    await state.finish()
+    await message.answer("""<b>Введите запрос</b>
+
+Например: <code>Напиши сочинение на тему: Как я провёл это лето</code>""", reply_markup=user_kb.cancel)
+    await states.EnterPromt.gpt_prompt.set()
+
+
+@dp.message_handler(state="*", text="👨🏻‍💻Поддержка")
+async def support(message: Message, state: FSMContext):
+    await state.finish()
+    await message.answer('Ответы на многие вопросы можно найти в нашем <a href="https://t.me/NeuronAgent">канале</a>.',
+                         disable_web_page_preview=True, reply_markup=user_kb.about)
+
+
+@dp.message_handler(state="*", text="🎨Изображение")
+async def gen_img(message: Message, state: FSMContext):
+    await state.finish()
+    await message.answer("""<b>Введите запрос для генерации изображения</b>
+
+Например: <code>Замерзшее прозрачное озеро вокруг заснеженных горных вершин</code>""",
+                         reply_markup=user_kb.cancel)
+    await states.EnterPromt.mdjrny_prompt.set()
+
+
 @dp.message_handler(state=states.EnterAmount.enter_amount)
 async def create_other_order(message: Message, state: FSMContext):
     try:
@@ -80,36 +106,10 @@ async def create_other_order(message: Message, state: FSMContext):
         await state.finish()
 
 
-@dp.message_handler(state="*", text="👨🏻‍💻Поддержка")
-async def support(message: Message, state: FSMContext):
-    await state.finish()
-    await message.answer('Ответы на многие вопросы можно найти в нашем <a href="https://t.me/NeuronAgent">канале</a>.',
-                         disable_web_page_preview=True, reply_markup=user_kb.about)
-
-
 @dp.message_handler(state="*", text="Отмена")
 async def cancel(message: Message, state: FSMContext):
     await state.finish()
     await message.answer("Ввод остановлен", reply_markup=user_kb.menu)
-
-
-@dp.message_handler(state="*", text="💬Текст")
-async def ask_question(message: Message, state: FSMContext):
-    await state.finish()
-    await message.answer("""<b>Введите запрос</b>
-    
-Например: <code>Напиши сочинение на тему: Как я провёл это лето</code>""", reply_markup=user_kb.cancel)
-    await states.EnterPromt.gpt_prompt.set()
-
-
-@dp.message_handler(state="*", text="🎨Изображение")
-async def gen_img(message: Message, state: FSMContext):
-    await state.finish()
-    await message.answer("""<b>Введите запрос для генерации изображения</b>
-    
-Например: <code>Замерзшее прозрачное озеро вокруг заснеженных горных вершин</code>""",
-                         reply_markup=user_kb.cancel)
-    await states.EnterPromt.mdjrny_prompt.set()
 
 
 @dp.message_handler(state=states.EnterPromt.gpt_prompt)
