@@ -18,10 +18,10 @@ async def show_stats(message: Message):
     await message.answer(f"""Количество пользователей: {stats_data['users_count']}
 За сегодня: {stats_data['today_users_count']}
 
-Запросов
+Запросов {stats_data['chatgpt_count'] + stats_data['image_count']}
 Текст - {stats_data['chatgpt_count']}
 Изображение - {stats_data['image_count']}
-За сегодня
+За сегодня {stats_data['today_chatgpt_count'] + stats_data['today_image_count']}
 Текст - {stats_data['today_chatgpt_count']}
 Изображение - {stats_data['today_image_count']}
 

@@ -21,10 +21,12 @@ class CheckRegMiddleware(BaseMiddleware):
         try:
             status: ChatMember = await bot.get_chat_member(channel_id, user_id)
             if status.status == "left":
-                await bot.send_message(user_id, "Чтобы использовать бота, подпишитесь на канал",
-                                       reply_markup=user_kb.partner)
                 if update.callback_query:
-                    await update.callback_query.answer()
+                    await update.callback_query.answer("Необходимо вступить в канал")
+                else:
+                    await bot.send_message(user_id, "Для продолжения подпишитесь на наш канал",
+                                           reply_markup=user_kb.partner)
+
                 raise CancelHandler()
         except ChatNotFound as e:
             print(e)
