@@ -17,8 +17,12 @@ cancel = ReplyKeyboardMarkup(resize_keyboard=True, row_width=1).add(KeyboardButt
 top_up_balance = InlineKeyboardMarkup(row_width=1).add(
     InlineKeyboardButton("💰Пополнить баланс", callback_data="top_up_balance"))
 
-partner = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("↗️Перейти и подписаться", url="https://t.me/NeuronAgent"),
-                                                InlineKeyboardButton("✅Я подписался", callback_data="check_sub"))
+partner = InlineKeyboardMarkup(row_width=1).add(
+    InlineKeyboardButton("↗️Перейти и подписаться", url="https://t.me/NeuronAgent"),
+    InlineKeyboardButton("✅Я подписался", callback_data="check_sub"))
+
+back_to_choose = InlineKeyboardMarkup(row_width=1).add(
+    InlineKeyboardButton("🔙Назад", callback_data="back_to_choose_balance"))
 
 
 def get_pay(user_id):
@@ -33,4 +37,4 @@ def get_pay(user_id):
 
 def get_other_pay(user_id, amount):
     return InlineKeyboardMarkup(row_width=1).add(
-        InlineKeyboardButton("200₽", url=get_pay_url(user_id, amount)))
+        InlineKeyboardButton("Оплатить", url=get_pay_url(user_id, amount)))
