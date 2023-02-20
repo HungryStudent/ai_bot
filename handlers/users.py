@@ -126,6 +126,7 @@ async def gpt_prompt(message: Message, state: FSMContext):
     await state.finish()
     result = await ai.get_gpt(message.text)
     await message.answer(result)
+    await message.answer("<b>Выберите, текстовый формат либо создание изображения:</b>")
     user = db.get_user(message.from_user.id)
     if user["free_chatgpt"] > 0:
         db.remove_chatgpt(message.from_user.id)
@@ -155,6 +156,7 @@ async def mdjrny_prompt(message: Message, state: FSMContext):
         await message.answer(photo_url, reply_markup=user_kb.menu)
     else:
         await message.answer_photo(photo_url[0])
+        await message.answer("<b>Выберите, текстовый формат либо создание изображения:</b>")
         user = db.get_user(message.from_user.id)
         if user["free_image"] > 0:
             db.remove_image(message.from_user.id)
