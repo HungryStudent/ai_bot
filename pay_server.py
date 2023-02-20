@@ -13,10 +13,10 @@ app = FastAPI()
 
 
 @app.get('/api/pay/freekassa')
-async def check_pay_freekassa(MERCHANT_ORDER_ID):
-    db.add_tokens(MERCHANT_ORDER_ID)
+async def check_pay_freekassa(MERCHANT_ORDER_ID, AMOUNT):
+    db.add_balance(MERCHANT_ORDER_ID, AMOUNT)
     try:
-        await bot.send_message(MERCHANT_ORDER_ID, "Оплата прошла успешно, вам начислены токены")
+        await bot.send_message(MERCHANT_ORDER_ID, "💰Баланс успешно пополнен!")
     except ChatNotFound:
         pass
     except Exception as e:

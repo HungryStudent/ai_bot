@@ -15,5 +15,5 @@ else:
     log = logging.getLogger("logs")
 
 stor = MemoryStorage()
-bot = Bot(token=TOKEN)
+bot = Bot(token=TOKEN, parse_mode="HTML")
 dp = Dispatcher(bot, storage=stor)

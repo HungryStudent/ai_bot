@@ -15,12 +15,60 @@ async def start_message(message: Message, state: FSMContext):
     user = db.get_user(message.from_user.id)
     if user is None:
         db.add_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
-    await message.answer("Здравствуйте, вам начислено 10 запросов", reply_markup=user_kb.menu)
+    await message.answer("Здравствуйте", reply_markup=user_kb.menu)
 
 
-@dp.message_handler(text="Поддержка")
+@dp.callback_query_handler(text="check_sub")
+async def check_sub(call: CallbackQuery):
+    user = db.get_user(call.from_user.id)
+    if user is None:
+        db.add_user(call.from_user.id, call.from_user.username, call.from_user.first_name)
+    await call.message.answer("Здравствуйте", reply_markup=user_kb.menu)
+    await call.answer()
+
+
+@dp.message_handler(text="⚙Аккаунт")
+async def show_profile(message: Message):
+    user = db.get_user(message.from_user.id)
+    await message.answer(f"""🆔: <code>{message.from_user.id}</code>
+💰Баланс: {user['balance']} руб.""", reply_markup=user_kb.top_up_balance)
+
+
+@dp.callback_query_handler(text="back_to_profile")
+async def back_to_profile(call: CallbackQuery):
+    user = db.get_user(call.from_user.id)
+    await call.message.edit_text(f"""id: {call.from_user.id}
+Баланс: {user['balance']} руб.""", reply_markup=user_kb.top_up_balance)
+
+
+@dp.callback_query_handler(text="top_up_balance")
+async def choose_amount(call: CallbackQuery):
+    await call.message.edit_text("Выберите сумму пополнения", reply_markup=user_kb.get_pay(call.from_user.id))
+
+
+@dp.callback_query_handler(text="other_amount")
+async def enter_other_amount(call: CallbackQuery):
+    await call.message.edit_text("Введите сумму пополнения в рублях")
+    await states.EnterAmount.enter_amount.set()
+
+
+@dp.message_handler(state=states.EnterAmount.enter_amount)
+async def create_other_order(message: Message, state: FSMContext):
+    try:
+        amount = int(message.text)
+    except ValueError:
+        await message.answer("Введите целое число!")
+        return
+    if amount < 200:
+        await message.answer("Минимальная сумма платежа 200 рублей")
+    else:
+        await message.answer("Оплатите", reply_markup=user_kb.get_other_pay(message.from_user.id, amount))
+        await state.finish()
+
+
+@dp.message_handler(text="👨🏻‍💻Поддержка")
 async def support(message: Message):
-    await message.answer("По всем вопросам: @NeuronSupportBot")
+    await message.answer("Полезные ссылки", reply_markup=user_kb.about)
 
 
 @dp.message_handler(state="*", text="Отмена")
@@ -29,39 +77,56 @@ async def cancel(message: Message, state: FSMContext):
     await message.answer("Ввод остановлен", reply_markup=user_kb.menu)
 
 
-@dp.message_handler(text="Задать вопрос")
+@dp.message_handler(text="💬Текст")
 async def ask_question(message: Message):
     user = db.get_user(message.from_user.id)
-    if user["tokens"] == 0:
-        await message.answer("У вас закончились запросы, купите их", reply_markup=user_kb.get_pay(message.from_user.id))
-        return
-    await message.answer("Введите ваш вопрос", reply_markup=user_kb.cancel)
+    if user["balance"] < 10:
+        if user["free_chatgpt"] == 0:
+            await message.answer("""Упс.. 
+Недостаточно баланса
+
+1 запрос - 10 рублей""", reply_markup=user_kb.top_up_balance)
+            return
+    await message.answer("""<b>Введите запрос</b>
+    
+<i>Например</i>: <code>Сочинение на тему: Как я провёл это лето</code>""", reply_markup=user_kb.cancel)
     await states.EnterPromt.gpt_prompt.set()
 
 
-@dp.message_handler(text="Сгенерировать изображение")
+@dp.message_handler(text="🎨Изображение")
 async def gen_img(message: Message):
     user = db.get_user(message.from_user.id)
-    if user["tokens"] == 0:
-        await message.answer("У вас закончились запросы, купите их", reply_markup=user_kb.get_pay(message.from_user.id))
-        return
-    await message.answer("Введите описание фото", reply_markup=user_kb.cancel)
+    if user["balance"] < 10:
+        if user["free_image"] == 0:
+            await message.answer("""Упс.. 
+Недостаточно баланса
+
+1 запрос - 10 рублей""", reply_markup=user_kb.top_up_balance)
+            return
+    await message.answer("""<b>Введите запрос для генерации изображения</b>
+    
+<i>Например</i>: <code>Замерзшее прозрачное озеро вокруг заснеженных горных вершин</code>""",
+                         reply_markup=user_kb.cancel)
     await states.EnterPromt.mdjrny_prompt.set()
 
 
 @dp.message_handler(state=states.EnterPromt.gpt_prompt)
 async def gpt_prompt(message: Message, state: FSMContext):
-    db.remove_token(message.from_user.id)
     await message.answer("Ожидайте, генерируется ответ", reply_markup=user_kb.menu)
     await message.answer_chat_action(ChatActions.TYPING)
     await state.finish()
     result = await ai.get_gpt(message.text)
     await message.answer(result)
+    user = db.get_user(message.from_user.id)
+    if user["free_image"] > 0:
+        db.remove_image(message.from_user.id)
+    else:
+        db.remove_balance(message.from_user.id)
+    db.add_action(message.from_user.id, "chatgpt")
 
 
 @dp.message_handler(state=states.EnterPromt.mdjrny_prompt)
 async def mdjrny_prompt(message: Message, state: FSMContext):
-    db.remove_token(message.from_user.id)
     await message.answer("Ожидайте, изображение генерируется", reply_markup=user_kb.menu)
     await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
     await state.finish()
@@ -70,3 +135,9 @@ async def mdjrny_prompt(message: Message, state: FSMContext):
         await message.answer(photo_url, reply_markup=user_kb.menu)
     else:
         await message.answer_photo(photo_url[0])
+        user = db.get_user(message.from_user.id)
+        if user["free_image"] > 0:
+            db.remove_image(message.from_user.id)
+        else:
+            db.remove_balance(message.from_user.id)
+        db.add_action(message.from_user.id, "image")
