@@ -95,7 +95,7 @@ async def cancel(message: Message, state: FSMContext):
 async def ask_question(message: Message):
     await message.answer("""<b>Введите запрос</b>
     
-<i>Например</i>: <code>Сочинение на тему: Как я провёл это лето</code>""", reply_markup=user_kb.cancel)
+Например: <code>Напиши сочинение на тему: Как я провёл это лето</code>""", reply_markup=user_kb.cancel)
     await states.EnterPromt.gpt_prompt.set()
 
 
@@ -103,7 +103,7 @@ async def ask_question(message: Message):
 async def gen_img(message: Message):
     await message.answer("""<b>Введите запрос для генерации изображения</b>
     
-<i>Например</i>: <code>Замерзшее прозрачное озеро вокруг заснеженных горных вершин</code>""",
+Например: <code>Замерзшее прозрачное озеро вокруг заснеженных горных вершин</code>""",
                          reply_markup=user_kb.cancel)
     await states.EnterPromt.mdjrny_prompt.set()
 
@@ -123,11 +123,11 @@ async def gpt_prompt(message: Message, state: FSMContext):
     await message.answer("Ожидайте, генерирую ответ..🕙", reply_markup=user_kb.menu)
     await message.answer_chat_action(ChatActions.TYPING)
     await state.finish()
-    result = await ai.get_gpt(message.text)
-    await message.answer(result)
+    # result = await ai.get_gpt(message.text)
+    # await message.answer(result)
     user = db.get_user(message.from_user.id)
-    if user["free_image"] > 0:
-        db.remove_image(message.from_user.id)
+    if user["free_chatgpt"] > 0:
+        db.remove_chatgpt(message.from_user.id)
     else:
         db.remove_balance(message.from_user.id)
     db.add_action(message.from_user.id, "chatgpt")
