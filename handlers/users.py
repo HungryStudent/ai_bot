@@ -82,7 +82,7 @@ async def create_other_order(message: Message, state: FSMContext):
 @dp.message_handler(text="👨🏻‍💻Поддержка")
 async def support(message: Message):
     await message.answer('Ответы на многие вопросы можно найти в нашем <a href="https://t.me/NeuronAgent">канале</a>.',
-                         reply_markup=user_kb.about)
+                         disable_web_page_preview=True, reply_markup=user_kb.about)
 
 
 @dp.message_handler(state="*", text="Отмена")
