@@ -119,6 +119,7 @@ async def gpt_prompt(message: Message, state: FSMContext):
 1 запрос - 10 рублей</i>
 
 Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
+            await state.finish()
             return
     await message.answer("Ожидайте, генерирую ответ..🕙", reply_markup=user_kb.menu)
     await message.answer_chat_action(ChatActions.TYPING)
@@ -144,6 +145,7 @@ async def mdjrny_prompt(message: Message, state: FSMContext):
 1 запрос - 10 рублей</i>
 
 Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
+            await state.finish()
             return
     await message.answer("Ожидайте, генерирую изображение..🕙", reply_markup=user_kb.menu)
     await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
