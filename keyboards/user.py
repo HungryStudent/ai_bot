@@ -27,9 +27,9 @@ back_to_choose = InlineKeyboardMarkup(row_width=1).add(
 
 def get_pay(user_id):
     return InlineKeyboardMarkup(row_width=3).add(
-        InlineKeyboardButton("200₽", web_app=WebAppInfo(get_pay_url(user_id, 200))),
-        InlineKeyboardButton("500₽", web_app=WebAppInfo(get_pay_url(user_id, 500))),
-        InlineKeyboardButton("1000₽", web_app=WebAppInfo(get_pay_url(user_id, 1000)))).add(
+        InlineKeyboardButton("200₽", web_app=WebAppInfo(url=get_pay_url(user_id, 200))),
+        InlineKeyboardButton("500₽", web_app=WebAppInfo(url=get_pay_url(user_id, 500))),
+        InlineKeyboardButton("1000₽", web_app=WebAppInfo(url=get_pay_url(user_id, 1000)))).add(
         InlineKeyboardButton("💰Другая сумма", callback_data="other_amount")).add(
         InlineKeyboardButton("🔙Назад", callback_data="back_to_profile")
     )
