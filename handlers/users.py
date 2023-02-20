@@ -15,7 +15,7 @@ async def start_message(message: Message, state: FSMContext):
     user = db.get_user(message.from_user.id)
     if user is None:
         db.add_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
-    await message.answer("""<b>NeuronAgent</b>🤖 - <code>Искусственный Интеллект.</code>
+    await message.answer("""<b>NeuronAgent</b>🤖 - <i>Искусственный Интеллект.</i>
 
 <b>Текстовый формат или создание изображения?</b>""", reply_markup=user_kb.menu)
 
@@ -25,7 +25,7 @@ async def check_sub(call: CallbackQuery):
     user = db.get_user(call.from_user.id)
     if user is None:
         db.add_user(call.from_user.id, call.from_user.username, call.from_user.first_name)
-    await call.message.answer("""<b>NeuronAgent</b>🤖 - <code>Искусственный Интеллект.</code>
+    await call.message.answer("""<b>NeuronAgent</b>🤖 - <i>Искусственный Интеллект.</i>
 
 <b>Текстовый формат или создание изображения?</b>""", reply_markup=user_kb.menu)
     await call.answer()
@@ -112,10 +112,12 @@ async def gpt_prompt(message: Message, state: FSMContext):
     user = db.get_user(message.from_user.id)
     if user["balance"] < 10:
         if user["free_chatgpt"] == 0:
-            await message.answer("""Упс.. 
-    Недостаточно баланса
+            await message.answer("""<i>Упс.. 
+Недостаточно средств
 
-    1 запрос - 10 рублей""", reply_markup=user_kb.top_up_balance)
+1 запрос - 10 рублей</i>
+
+Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
             return
     await message.answer("Ожидайте, генерирую ответ..🕙", reply_markup=user_kb.menu)
     await message.answer_chat_action(ChatActions.TYPING)
@@ -135,10 +137,12 @@ async def mdjrny_prompt(message: Message, state: FSMContext):
     user = db.get_user(message.from_user.id)
     if user["balance"] < 10:
         if user["free_image"] == 0:
-            await message.answer("""Упс.. 
-    Недостаточно баланса
+            await message.answer("""<i>Упс.. 
+Недостаточно средств
 
-    1 запрос - 10 рублей""", reply_markup=user_kb.top_up_balance)
+1 запрос - 10 рублей</i>
+
+Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
             return
     await message.answer("Ожидайте, генерирую изображение..🕙", reply_markup=user_kb.menu)
     await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
