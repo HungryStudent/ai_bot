@@ -73,9 +73,9 @@ async def create_other_order(message: Message, state: FSMContext):
     if amount < 200:
         await message.answer("Минимальная сумма платежа 200 рублей")
     else:
-        await message.answer(f"""💰 Сумма: {amount} рублей
+        await message.answer(f"""💰 Сумма: <b>{amount} рублей
 
-♻️ Средства зачислятся автоматически""", reply_markup=user_kb.get_other_pay(message.from_user.id, amount))
+♻️ Средства зачислятся автоматически</b>""", reply_markup=user_kb.get_other_pay(message.from_user.id, amount))
         await state.finish()
 
 
