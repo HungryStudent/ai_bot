@@ -37,5 +37,5 @@ def get_pay(user_id):
 
 def get_other_pay(user_id, amount):
     return InlineKeyboardMarkup(row_width=1).add(
-        InlineKeyboardButton("Оплатить", web_app=WebAppInfo(get_pay_url(user_id, amount))),
+        InlineKeyboardButton("Оплатить", web_app=WebAppInfo(url=get_pay_url(user_id, amount))),
         InlineKeyboardButton("🔙Назад", callback_data="back_to_choose_balance"))
