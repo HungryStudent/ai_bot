@@ -31,8 +31,9 @@ async def check_sub(call: CallbackQuery):
     await call.answer()
 
 
-@dp.message_handler(text="⚙Аккаунт")
-async def show_profile(message: Message):
+@dp.message_handler(state="*", text="⚙Аккаунт")
+async def show_profile(message: Message, state: FSMContext):
+    await state.finish()
     user = db.get_user(message.from_user.id)
     await message.answer(f"""🆔: <code>{message.from_user.id}</code>
 💰Баланс: {user['balance']} руб.""", reply_markup=user_kb.top_up_balance)
@@ -79,8 +80,9 @@ async def create_other_order(message: Message, state: FSMContext):
         await state.finish()
 
 
-@dp.message_handler(text="👨🏻‍💻Поддержка")
-async def support(message: Message):
+@dp.message_handler(state="*", text="👨🏻‍💻Поддержка")
+async def support(message: Message, state: FSMContext):
+    await state.finish()
     await message.answer('Ответы на многие вопросы можно найти в нашем <a href="https://t.me/NeuronAgent">канале</a>.',
                          disable_web_page_preview=True, reply_markup=user_kb.about)
 
@@ -91,16 +93,18 @@ async def cancel(message: Message, state: FSMContext):
     await message.answer("Ввод остановлен", reply_markup=user_kb.menu)
 
 
-@dp.message_handler(text="💬Текст")
-async def ask_question(message: Message):
+@dp.message_handler(state="*", text="💬Текст")
+async def ask_question(message: Message, state: FSMContext):
+    await state.finish()
     await message.answer("""<b>Введите запрос</b>
     
 Например: <code>Напиши сочинение на тему: Как я провёл это лето</code>""", reply_markup=user_kb.cancel)
     await states.EnterPromt.gpt_prompt.set()
 
 
-@dp.message_handler(text="🎨Изображение")
-async def gen_img(message: Message):
+@dp.message_handler(state="*", text="🎨Изображение")
+async def gen_img(message: Message, state: FSMContext):
+    await state.finish()
     await message.answer("""<b>Введите запрос для генерации изображения</b>
     
 Например: <code>Замерзшее прозрачное озеро вокруг заснеженных горных вершин</code>""",
