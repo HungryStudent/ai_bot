@@ -10,7 +10,6 @@ from create_bot import bot
 
 class CheckRegMiddleware(BaseMiddleware):
     async def on_pre_process_update(self, update: Update, data: dict):
-        return
         if update.message:
             user_id = update.message.from_user.id
         elif update.callback_query:

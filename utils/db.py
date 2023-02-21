@@ -74,14 +74,6 @@ def remove_balance(user_id):
         connection.commit()
 
 
-def add_balance_from_admin(user_id, amount):
-    with closing(sqlite3.connect(database)) as connection:
-        connection.row_factory = dict_factory
-        cursor: Cursor = connection.cursor()
-        cursor.execute("UPDATE users SET balance = balance + ? WHERE user_id = ?", (amount, user_id))
-        connection.commit()
-
-
 def add_balance(user_id, amount):
     with closing(sqlite3.connect(database)) as connection:
         connection.row_factory = dict_factory

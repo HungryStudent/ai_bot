@@ -30,16 +30,6 @@ async def show_stats(message: Message):
 За сегодня: {stats_data['today_orders_count']} ({stats_data['today_orders_sum']} руб.)""")
 
 
-@dp.message_handler(commands="balance")
-async def add_balance(message: Message):
-    try:
-        user_id, value = message.get_args().split(" ")
-    except ValueError:
-        await message.answer("Команда введена неверно. Используйте /balance {id пользователя} {баланс}")
-        return
-    db.add_balance_from_admin(user_id, value)
-
-
 @dp.message_handler(commands="send", user_id=admin_chat)
 async def enter_text(message: Message):
     await message.answer("Введите текст рассылки", reply_markup=admin_kb.cancel)
