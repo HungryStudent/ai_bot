@@ -32,7 +32,7 @@ async def get_gpt(prompt):
                 print(f"Ошибка {response}")
                 if "That model is currently overloaded with other requests" in response["error"]["message"]:
                     return "Модель ChatGPT сейчас перегружена запросами, повторите запрос позже."
-                return "Генерация текста в данный момент недоступена, попробуйте чуть позже"
+                return "Генерация текста в данный момент недоступна, попробуйте чуть позже"
 
 
 async def get_mdjrny(prompt):
