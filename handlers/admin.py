@@ -30,7 +30,7 @@ async def show_stats(message: Message):
 За сегодня: {stats_data['today_orders_count']} ({stats_data['today_orders_sum']} руб.)""")
 
 
-@dp.message_handler(commands="balance")
+@dp.message_handler(commands="balance", user_id=admin_chat)
 async def add_balance(message: Message):
     try:
         user_id, value = message.get_args().split(" ")
