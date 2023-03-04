@@ -45,7 +45,7 @@ def add_user(user_id, username, first_name):
     with closing(sqlite3.connect(database)) as connection:
         connection.row_factory = dict_factory
         cursor: Cursor = connection.cursor()
-        cursor.execute("INSERT INTO users VALUES (?, ?, ?, 0, ?, 5, 0, 'empty')",
+        cursor.execute("INSERT INTO users VALUES (?, ?, ?, 0, ?, 3, 0, 'empty')",
                        (user_id, username, first_name, int(datetime.now().timestamp())))
         connection.commit()
 
