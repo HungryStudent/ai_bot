@@ -2,12 +2,10 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
     ReplyKeyboardRemove, WebAppInfo
 from aiogram.utils.callback_data import CallbackData
 
+from utils import db
 from utils.pay import get_pay_url
 
-menu = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬Текст"),
-                                                                  KeyboardButton("🎨Изображение"),
-                                                                  KeyboardButton("⚙Аккаунт"),
-                                                                  KeyboardButton("👨🏻‍💻Поддержка"))
+
 
 about = InlineKeyboardMarkup(row_width=2).add(InlineKeyboardButton("📢Канал проекта", url="https://t.me/NeuronAgent"),
                                               InlineKeyboardButton("🆘Помощь", url="https://t.me/NeuronSupportBot"))
@@ -23,6 +21,20 @@ partner = InlineKeyboardMarkup(row_width=1).add(
 
 back_to_choose = InlineKeyboardMarkup(row_width=1).add(
     InlineKeyboardButton("🔙Назад", callback_data="back_to_choose_balance"))
+
+
+def get_menu(user_id):
+    user = db.get_user(user_id)
+    if user["default_ai"] == "chatgpt":
+        return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬Текст✅"),
+                                                                          KeyboardButton("🎨Изображение"),
+                                                                          KeyboardButton("⚙Аккаунт"),
+                                                                          KeyboardButton("👨🏻‍💻Поддержка"))
+    elif user["default_ai"] == "image":
+        return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬Текст"),
+                                                                          KeyboardButton("🎨Изображение✅"),
+                                                                          KeyboardButton("⚙Аккаунт"),
+                                                                          KeyboardButton("👨🏻‍💻Поддержка"))
 
 
 def get_pay(user_id):
