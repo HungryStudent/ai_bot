@@ -35,7 +35,11 @@ def get_menu(user_id):
                                                                           KeyboardButton("🎨Изображение✅"),
                                                                           KeyboardButton("⚙Аккаунт"),
                                                                           KeyboardButton("👨🏻‍💻Поддержка"))
-
+    else:
+        return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬Текст"),
+                                                                          KeyboardButton("🎨Изображение"),
+                                                                          KeyboardButton("⚙Аккаунт"),
+                                                                          KeyboardButton("👨🏻‍💻Поддержка"))
 
 def get_pay(user_id):
     return InlineKeyboardMarkup(row_width=3).add(
