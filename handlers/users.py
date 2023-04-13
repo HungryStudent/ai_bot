@@ -38,7 +38,7 @@ async def check_sub(call: CallbackQuery):
 @dp.message_handler(text="🤝Партнерская программа")
 async def ref_menu(message: Message):
     await message.answer(
-        f'Ваша ссылка: https://t.me/efanov_dev_bot?start={message.from_user.id}\n\nПолучайте 20% с каждого пополнения реферала',
+        f'Ваша ссылка: https://t.me/NeuronAgentBot?start={message.from_user.id}\n\nПолучайте 20% с каждого пополнения реферала',
         disable_web_page_preview=True)
 
 
