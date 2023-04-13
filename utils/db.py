@@ -147,7 +147,7 @@ def get_iam_token():
         return cursor.fetchone()['config_value']
 
 
-def change_dadata(iam_token):
+def change_iam_token(iam_token):
     with closing(sqlite3.connect(database)) as connection:
         cursor = connection.cursor()
         cursor.execute(
