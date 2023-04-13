@@ -5,8 +5,6 @@ from aiogram.utils.callback_data import CallbackData
 from utils import db
 from utils.pay import get_pay_url
 
-
-
 about = InlineKeyboardMarkup(row_width=2).add(InlineKeyboardButton("📢Канал проекта", url="https://t.me/NeuronAgent"),
                                               InlineKeyboardButton("🆘Помощь", url="https://t.me/NeuronSupportBot"))
 
@@ -23,23 +21,32 @@ back_to_choose = InlineKeyboardMarkup(row_width=1).add(
     InlineKeyboardButton("🔙Назад", callback_data="back_to_choose_balance"))
 
 
+def get_try_prompt(ai_type):
+    return InlineKeyboardMarkup(row_width=1).add(
+        InlineKeyboardButton("🔄 Другой вариант", callback_data=f"try_prompt:{ai_type}"))
+
+
 def get_menu(user_id):
     user = db.get_user(user_id)
     if user["default_ai"] == "chatgpt":
         return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬Текст✅"),
                                                                           KeyboardButton("🎨Изображение"),
                                                                           KeyboardButton("⚙Аккаунт"),
-                                                                          KeyboardButton("👨🏻‍💻Поддержка"))
+                                                                          KeyboardButton("👨🏻‍💻Поддержка"),
+                                                                          KeyboardButton("🤝Партнерская программа"))
     elif user["default_ai"] == "image":
         return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬Текст"),
                                                                           KeyboardButton("🎨Изображение✅"),
                                                                           KeyboardButton("⚙Аккаунт"),
-                                                                          KeyboardButton("👨🏻‍💻Поддержка"))
+                                                                          KeyboardButton("👨🏻‍💻Поддержка"),
+                                                                          KeyboardButton("🤝Партнерская программа"))
     else:
         return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬Текст"),
                                                                           KeyboardButton("🎨Изображение"),
                                                                           KeyboardButton("⚙Аккаунт"),
-                                                                          KeyboardButton("👨🏻‍💻Поддержка"))
+                                                                          KeyboardButton("👨🏻‍💻Поддержка"),
+                                                                          KeyboardButton("🤝Партнерская программа"))
+
 
 def get_pay(user_id):
     return InlineKeyboardMarkup(row_width=3).add(

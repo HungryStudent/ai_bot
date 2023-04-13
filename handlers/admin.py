@@ -26,8 +26,7 @@ async def show_stats(message: Message):
 Текст - {stats_data['today_chatgpt_count']}
 Изображение - {stats_data['today_image_count']}
 
-Пополнений: {stats_data['orders_count']} ({stats_data['orders_sum']} руб.)
-За сегодня: {stats_data['today_orders_count']} ({stats_data['today_orders_sum']} руб.)""")
+Пополнений за сегодня: {stats_data['today_orders_count']} ({stats_data['today_orders_sum']} руб.)""")
 
 
 @dp.message_handler(commands="balance", user_id=admin_chat)

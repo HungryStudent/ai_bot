@@ -17,11 +17,14 @@ def start():
     with closing(sqlite3.connect(database)) as connection:
         cursor = connection.cursor()
         cursor.execute(
-            "CREATE TABLE IF NOT EXISTS users(user_id INT, username TEXT, first_name TEXT, balance INT, reg_time INT, free_chatgpt INT, free_image INT, default_ai TEXT)")
+            "CREATE TABLE IF NOT EXISTS users(user_id INT, username TEXT, first_name TEXT, balance INT, reg_time INT, free_chatgpt INT, free_image INT, default_ai TEXT, inviter_id INT)")
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS orders(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INT, amount INT, pay_time INT)")
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS usage(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INT, ai_type TEXT, use_time INT)")
+        cursor.execute(
+            "CREATE TABLE IF NOT EXISTS config(config_key TEXT, config_value TEXT)")
+        cursor.execute("INSERT INTO config VALUES('iam_token', '1')")
         connection.commit()
 
 
@@ -37,16 +40,17 @@ def get_user(user_id):
     with closing(sqlite3.connect(database)) as connection:
         connection.row_factory = dict_factory
         cursor: Cursor = connection.cursor()
-        cursor.execute("SELECT user_id, balance, free_chatgpt, free_image, default_ai FROM users WHERE user_id = ?", (user_id,))
+        cursor.execute("SELECT user_id, balance, free_chatgpt, free_image, default_ai FROM users WHERE user_id = ?",
+                       (user_id,))
         return cursor.fetchone()
 
 
-def add_user(user_id, username, first_name):
+def add_user(user_id, username, first_name, inviter_id):
     with closing(sqlite3.connect(database)) as connection:
         connection.row_factory = dict_factory
         cursor: Cursor = connection.cursor()
-        cursor.execute("INSERT INTO users VALUES (?, ?, ?, 0, ?, 3, 0, 'empty')",
-                       (user_id, username, first_name, int(datetime.now().timestamp())))
+        cursor.execute("INSERT INTO users VALUES (?, ?, ?, 0, ?, 3, 0, 'empty', ?)",
+                       (user_id, username, first_name, int(datetime.now().timestamp()), inviter_id))
         connection.commit()
 
 
@@ -94,7 +98,11 @@ def add_balance(user_id, amount):
     with closing(sqlite3.connect(database)) as connection:
         connection.row_factory = dict_factory
         cursor: Cursor = connection.cursor()
+        ref_balance = int(float(amount) * 0.2)
         cursor.execute("UPDATE users SET balance = balance + ? WHERE user_id = ?", (amount, user_id))
+        cursor.execute(
+            "UPDATE users SET balance = balance + ? WHERE user_id = (SELECT inviter_id FROM users WHERE user_id = ?)",
+            (ref_balance, user_id))
         cursor.execute("INSERT INTO orders(user_id, amount, pay_time) VALUES (?, ?, ?)",
                        (user_id, amount, int(datetime.now().timestamp())))
         connection.commit()
@@ -129,3 +137,19 @@ def get_stat():
                        "(SELECT SUM(amount) FROM orders WHERE pay_time between ? and ?) as today_orders_sum",
                        (start, end, start, end, start, end, start, end, start, end))
         return cursor.fetchone()
+
+
+def get_iam_token():
+    with closing(sqlite3.connect(database)) as connection:
+        connection.row_factory = dict_factory
+        cursor = connection.cursor()
+        cursor.execute("SELECT config_value FROM config WHERE config_key = 'iam_token'")
+        return cursor.fetchone()['config_value']
+
+
+def change_dadata(iam_token):
+    with closing(sqlite3.connect(database)) as connection:
+        cursor = connection.cursor()
+        cursor.execute(
+            "UPDATE config SET config_value = ? WHERE config_key = 'iam_token'", (iam_token,))
+        connection.commit()

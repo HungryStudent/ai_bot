@@ -1,5 +1,6 @@
 from aiogram.dispatcher import FSMContext
-from aiogram.types import Message, CallbackQuery, ChatActions
+from aiogram.dispatcher.filters import Text
+from aiogram.types import Message, CallbackQuery, ChatActions, MediaGroup, InputMedia
 
 from states import user as states
 import keyboards.user as user_kb
@@ -10,9 +11,14 @@ from utils import db, ai
 @dp.message_handler(state="*", commands='start')
 async def start_message(message: Message, state: FSMContext):
     await state.finish()
+
     user = db.get_user(message.from_user.id)
     if user is None:
-        db.add_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
+        inviter_id = message.get_args()
+        if inviter_id in ["", str(message.from_user.id)]:
+            inviter_id = 0
+
+        db.add_user(message.from_user.id, message.from_user.username, message.from_user.first_name, inviter_id)
     await message.answer("""<b>NeuronAgent</b>🤖 - <i>Искусственный Интеллект.</i>
 
 <b>Текстовый формат или создание изображения?</b>""", reply_markup=user_kb.get_menu(message.from_user.id))
@@ -27,6 +33,13 @@ async def check_sub(call: CallbackQuery):
 
 <b>Текстовый формат или создание изображения?</b>""", reply_markup=user_kb.get_menu(call.from_user.id))
     await call.answer()
+
+
+@dp.message_handler(text="🤝Партнерская программа")
+async def ref_menu(message: Message):
+    await message.answer(
+        f'Ваша ссылка: https://t.me/efanov_dev_bot?start={message.from_user.id}\n\nПолучайте 20% с каждого пополнения реферала',
+        disable_web_page_preview=True)
 
 
 @dp.message_handler(state="*", text="⚙Аккаунт")
@@ -62,6 +75,7 @@ async def enter_other_amount(call: CallbackQuery):
     await states.EnterAmount.enter_amount.set()
 
 
+@dp.message_handler(state="*", text="💬Текст✅")
 @dp.message_handler(state="*", text="💬Текст")
 async def ask_question(message: Message, state: FSMContext):
     await state.finish()
@@ -74,8 +88,7 @@ async def ask_question(message: Message, state: FSMContext):
 <i>Английский язык бот понимает лучше.</i>
 
 Например: <code>Write a blog post about the environmental benefits of segregated waste collection for a broad audience</code>""",
-                         reply_markup=user_kb.cancel)
-    await states.EnterPromt.gpt_prompt.set()
+                         reply_markup=user_kb.get_menu(message.from_user.id))
 
 
 @dp.message_handler(state="*", text="👨🏻‍💻Поддержка")
@@ -85,6 +98,7 @@ async def support(message: Message, state: FSMContext):
                          disable_web_page_preview=True, reply_markup=user_kb.about)
 
 
+@dp.message_handler(state="*", text="🎨Изображение✅")
 @dp.message_handler(state="*", text="🎨Изображение")
 async def gen_img(message: Message, state: FSMContext):
     await state.finish()
@@ -96,8 +110,7 @@ async def gen_img(message: Message, state: FSMContext):
 <u><i>Английский язык бот понимает лучше.</i></u>
 
 Например: <code>Cat, psytrance, uhd, detailed, ornate, beautiful, 8k, photography</code>""",
-                         reply_markup=user_kb.cancel)
-    await states.EnterPromt.mdjrny_prompt.set()
+                         reply_markup=user_kb.get_menu(message.from_user.id))
 
 
 @dp.message_handler(state=states.EnterAmount.enter_amount)
@@ -122,78 +135,78 @@ async def cancel(message: Message, state: FSMContext):
     await message.answer("Ввод остановлен", reply_markup=user_kb.get_menu(message.from_user.id))
 
 
-@dp.message_handler(state=states.EnterPromt.gpt_prompt)
-async def gpt_prompt(message: Message, state: FSMContext):
-    user = db.get_user(message.from_user.id)
-    if user["balance"] < 10:
-        if user["free_chatgpt"] == 0:
-            await message.answer("""<i>Упс.. 
+@dp.callback_query_handler(Text(startswith="try_prompt"))
+async def try_prompt(call: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    ai_type = call.data.split(":")[1]
+
+    user = db.get_user(call.from_user.id)
+
+    if user["default_ai"] == "chatgpt":
+        if user["balance"] < 10:
+            if user["free_chatgpt"] == 0:
+                await call.message.answer("""<i>Упс.. 
 Недостаточно средств
 
 1 запрос - 10 рублей</i>
 
 Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
-            await state.finish()
-            return
-    await message.answer("Ожидайте, генерирую ответ..🕙", reply_markup=user_kb.get_menu(message.from_user.id))
-    await message.answer_chat_action(ChatActions.TYPING)
-    await state.finish()
-    result = await ai.get_gpt(message.text)
-    await message.answer(result)
-    user = db.get_user(message.from_user.id)
-    if user["free_chatgpt"] > 0:
-        db.remove_chatgpt(message.from_user.id)
-    else:
-        db.remove_balance(message.from_user.id)
-    db.add_action(message.from_user.id, "chatgpt")
-
-
-@dp.message_handler(state=states.EnterPromt.mdjrny_prompt)
-async def mdjrny_prompt(message: Message, state: FSMContext):
-    user = db.get_user(message.from_user.id)
-    if user["balance"] < 10:
-        if user["free_image"] == 0:
-            await message.answer("""<i>Упс.. 
-Недостаточно средств
-
-1 запрос - 10 рублей</i>
-
-Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
-            await state.finish()
-            return
-    await message.answer("Ожидайте, генерирую изображение..🕙", reply_markup=user_kb.get_menu(message.from_user.id))
-    await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
-    await state.finish()
-    photo_url = await ai.get_mdjrny(message.text)
-    if photo_url == "Произошла ошибка, повторите попытку позже":
-        await message.answer(photo_url, reply_markup=user_kb.get_menu(message.from_user.id))
-    else:
-        await message.answer_photo(photo_url[0])
-        user = db.get_user(message.from_user.id)
-        if user["free_image"] > 0:
-            db.remove_image(message.from_user.id)
+                return
+        await call.message.answer("Ожидайте, генерирую ответ..🕙", reply_markup=user_kb.get_menu(call.from_user.id))
+        await call.message.answer_chat_action(ChatActions.TYPING)
+        result = await ai.get_gpt(data['prompt'])
+        await call.message.answer(result, reply_markup=user_kb.get_try_prompt('chatgpt'))
+        user = db.get_user(call.from_user.id)
+        if user["free_chatgpt"] > 0:
+            db.remove_chatgpt(call.from_user.id)
         else:
-            db.remove_balance(message.from_user.id)
-        db.add_action(message.from_user.id, "image")
+            db.remove_balance(call.from_user.id)
+        db.add_action(call.from_user.id, "chatgpt")
+    elif user["default_ai"] == "image":
+        if user["balance"] < 10:
+            if user["free_image"] == 0:
+                await call.message.answer("""<i>Упс.. 
+Недостаточно средств
+
+1 запрос - 10 рублей</i>
+
+Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
+                return
+        await call.message.answer("Ожидайте, генерирую изображение..🕙",
+                                  reply_markup=user_kb.get_menu(call.from_user.id))
+        await call.message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
+        photo_url = await ai.get_mdjrny(data['prompt'])
+        if photo_url == "Произошла ошибка, повторите попытку позже":
+            await call.message.answer(photo_url, reply_markup=user_kb.get_menu(call.from_user.id))
+        else:
+            await call.message.answer_photo(photo_url[0], reply_markup=user_kb.get_try_prompt('image'))
+            user = db.get_user(call.from_user.id)
+            if user["free_image"] > 0:
+                db.remove_image(call.from_user.id)
+            else:
+                db.remove_balance(call.from_user.id)
+            db.add_action(call.from_user.id, "image")
+    await call.answer()
 
 
 @dp.message_handler()
-async def prompt(message: Message):
+async def prompt(message: Message, state: FSMContext):
+    await state.update_data(prompt=message.text)
     user = db.get_user(message.from_user.id)
     if user["default_ai"] == "chatgpt":
         if user["balance"] < 10:
             if user["free_chatgpt"] == 0:
                 await message.answer("""<i>Упс.. 
-        Недостаточно средств
+Недостаточно средств
 
-        1 запрос - 10 рублей</i>
+1 запрос - 10 рублей</i>
 
-        Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
+Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
                 return
         await message.answer("Ожидайте, генерирую ответ..🕙", reply_markup=user_kb.get_menu(message.from_user.id))
         await message.answer_chat_action(ChatActions.TYPING)
         result = await ai.get_gpt(message.text)
-        await message.answer(result)
+        await message.answer(result, reply_markup=user_kb.get_try_prompt('chatgpt'))
         user = db.get_user(message.from_user.id)
         if user["free_chatgpt"] > 0:
             db.remove_chatgpt(message.from_user.id)
@@ -204,11 +217,11 @@ async def prompt(message: Message):
         if user["balance"] < 10:
             if user["free_image"] == 0:
                 await message.answer("""<i>Упс.. 
-        Недостаточно средств
+Недостаточно средств
 
-        1 запрос - 10 рублей</i>
+1 запрос - 10 рублей</i>
 
-        Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
+Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
                 return
         await message.answer("Ожидайте, генерирую изображение..🕙", reply_markup=user_kb.get_menu(message.from_user.id))
         await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
@@ -216,7 +229,7 @@ async def prompt(message: Message):
         if photo_url == "Произошла ошибка, повторите попытку позже":
             await message.answer(photo_url, reply_markup=user_kb.get_menu(message.from_user.id))
         else:
-            await message.answer_photo(photo_url[0])
+            await message.answer_photo(photo_url[0], reply_markup=user_kb.get_try_prompt('image'))
             user = db.get_user(message.from_user.id)
             if user["free_image"] > 0:
                 db.remove_image(message.from_user.id)
