@@ -1,5 +1,4 @@
 import replicate
-from googletrans import Translator
 import aiohttp
 import asyncio
 

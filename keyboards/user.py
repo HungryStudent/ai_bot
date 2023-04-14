@@ -1,6 +1,6 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, \
     ReplyKeyboardRemove, WebAppInfo
-from aiogram.utils.callback_data import CallbackData
+
 
 from utils import db
 from utils.pay import get_pay_url

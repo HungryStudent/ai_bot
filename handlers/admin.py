@@ -1,6 +1,6 @@
 import asyncio
 
-from aiogram.types import Message, CallbackQuery, MediaGroup
+from aiogram.types import Message
 from aiogram.dispatcher import FSMContext
 
 from config import admin_chat
@@ -9,7 +9,6 @@ import keyboards.admin as admin_kb
 import states.admin as states
 from utils import db
 
-import datetime
 
 
 @dp.message_handler(chat_id=admin_chat, commands="stats")
@@ -26,6 +25,7 @@ async def show_stats(message: Message):
 Текст - {stats_data['today_chatgpt_count']}
 Изображение - {stats_data['today_image_count']}
 
+Пополнений: {stats_data['orders_count']}
 Пополнений за сегодня: {stats_data['today_orders_count']} ({stats_data['today_orders_sum']} руб.)""")
 
 

@@ -1,6 +1,6 @@
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from aiogram.types import Message, CallbackQuery, ChatActions, MediaGroup, InputMedia
+from aiogram.types import Message, CallbackQuery, ChatActions
 
 from states import user as states
 import keyboards.user as user_kb
@@ -28,7 +28,7 @@ async def start_message(message: Message, state: FSMContext):
 async def check_sub(call: CallbackQuery):
     user = db.get_user(call.from_user.id)
     if user is None:
-        db.add_user(call.from_user.id, call.from_user.username, call.from_user.first_name)
+        db.add_user(call.from_user.id, call.from_user.username, call.from_user.first_name, 0)
     await call.message.answer("""<b>NeuronAgent</b>🤖 - <i>Искусственный Интеллект.</i>
 
 <b>Текстовый формат или создание изображения?</b>""", reply_markup=user_kb.get_menu(call.from_user.id))

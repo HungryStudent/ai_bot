@@ -1,8 +1,6 @@
 from aiogram.utils.exceptions import ChatNotFound
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI
 
-from keyboards import admin as admin_kb
-from keyboards import user as user_kb
 from create_bot import bot
 
 import uvicorn
