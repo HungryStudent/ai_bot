@@ -9,3 +9,4 @@ response = requests.post('https://iam.api.cloud.yandex.net/iam/v1/tokens',
                              "yandexPassportOauthToken": ya_token
                          })
 db.change_iam_token(response.json()['iamToken'])
+

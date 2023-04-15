@@ -2,10 +2,11 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.types import Message, CallbackQuery, ChatActions
 
+from config import bot_url
 from states import user as states
 import keyboards.user as user_kb
 from create_bot import dp
-from utils import db, ai
+from utils import db, ai, qr_api
 
 
 @dp.message_handler(state="*", commands='start')
@@ -37,9 +38,8 @@ async def check_sub(call: CallbackQuery):
 
 @dp.message_handler(text="🤝Партнерская программа")
 async def ref_menu(message: Message):
-    await message.answer(
-        f'Ваша ссылка: https://t.me/NeuronAgentBot?start={message.from_user.id}\n\nПолучайте 20% с каждого пополнения реферала',
-        disable_web_page_preview=True)
+    await message.answer_photo(qr_api.get_qr_photo(bot_url + '?start=' + str(message.from_user.id)),
+                               caption=f'Ваша ссылка: {bot_url}?start={message.from_user.id}\n\nПолучайте 20% с каждого пополнения реферала')
 
 
 @dp.message_handler(state="*", text="⚙Аккаунт")

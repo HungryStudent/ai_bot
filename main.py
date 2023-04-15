@@ -1,3 +1,6 @@
+from io import BytesIO
+
+import requests
 from aiogram.utils import executor
 from create_bot import dp, bot
 from middlewares.check_sub import CheckRegMiddleware

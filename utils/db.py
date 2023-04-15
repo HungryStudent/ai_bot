@@ -24,7 +24,9 @@ def start():
             "CREATE TABLE IF NOT EXISTS usage(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INT, ai_type TEXT, use_time INT)")
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS config(config_key TEXT, config_value TEXT)")
-        cursor.execute("INSERT INTO config VALUES('iam_token', '1')")
+        cursor.execute("SELECT config_value FROM config WHERE config_key = 'iam_token'")
+        if cursor.fetchone() is None:
+            cursor.execute("INSERT INTO config VALUES('iam_token', '1')")
         connection.commit()
 
 
