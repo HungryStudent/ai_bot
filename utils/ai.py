@@ -2,6 +2,7 @@ import replicate
 import aiohttp
 import asyncio
 
+import change_token
 from config import OPENAPI_TOKEN, REPLICATE_API_TOKEN, ya_folder
 from create_bot import bot
 from utils import db
@@ -23,8 +24,11 @@ async def get_translate(text):
                                     "targetLanguageCode": "en"
                                 }) as resp:
             response = await resp.json()
-            return response['translations'][0]['text']
-
+            try:
+                return response['translations'][0]['text']
+            except KeyError:
+                change_token.start()
+                return await get_translate(text)
 
 async def get_gpt(prompt):
     async with aiohttp.ClientSession() as session:
