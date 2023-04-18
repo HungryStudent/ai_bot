@@ -8,3 +8,7 @@ class EnterPromt(StatesGroup):
 
 class EnterAmount(StatesGroup):
     enter_amount = State()
+
+
+class EnterWithdrawInfo(StatesGroup):
+    purse = State()

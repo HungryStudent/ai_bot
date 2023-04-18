@@ -1,9 +1,15 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, \
     ReplyKeyboardRemove, WebAppInfo
 
-
 from utils import db
 from utils.pay import get_pay_url
+from urllib import parse
+
+withdraw_ref_menu = InlineKeyboardMarkup(row_width=2).add(
+    InlineKeyboardButton("На банковскую карту", callback_data='withdraw_ref:bank_card')).add(
+    InlineKeyboardButton("QIWI", callback_data="withdraw_ref:qiwi"),
+    InlineKeyboardButton("На баланс", callback_data="withdraw_ref:balance")
+)
 
 about = InlineKeyboardMarkup(row_width=2).add(InlineKeyboardButton("📢Канал проекта", url="https://t.me/NeuronAgent"),
                                               InlineKeyboardButton("🆘Помощь", url="https://t.me/NeuronSupportBot"))
@@ -62,3 +68,12 @@ def get_other_pay(user_id, amount):
     return InlineKeyboardMarkup(row_width=1).add(
         InlineKeyboardButton("Оплатить", web_app=WebAppInfo(url=get_pay_url(user_id, amount))),
         InlineKeyboardButton("🔙Назад", callback_data="back_to_choose_balance"))
+
+
+def get_ref_menu(url):
+    text_url = parse.quote(url)
+    url = f'https://t.me/share/url?url={text_url}'
+    return InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton('Поделиться ссылкой', url=url),
+                                                 InlineKeyboardButton('Вывод средств',
+                                                                      callback_data='withdraw_ref_menu'),
+                                                 InlineKeyboardButton('Назад', callback_data='check_sub'))

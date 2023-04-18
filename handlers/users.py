@@ -1,3 +1,5 @@
+import time
+
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.types import Message, CallbackQuery, ChatActions
@@ -6,7 +8,7 @@ from config import bot_url
 from states import user as states
 import keyboards.user as user_kb
 from create_bot import dp
-from utils import db, ai, qr_api
+from utils import db, ai, more_api
 
 
 @dp.message_handler(state="*", commands='start')
@@ -38,8 +40,22 @@ async def check_sub(call: CallbackQuery):
 
 @dp.message_handler(text="🤝Партнерская программа")
 async def ref_menu(message: Message):
-    await message.answer_photo(qr_api.get_qr_photo(bot_url + '?start=' + str(message.from_user.id)),
-                               caption=f'Ваша ссылка: {bot_url}?start={message.from_user.id}\n\nПолучайте 20% с каждого пополнения реферала')
+    ref_data = db.get_ref_stat(message.from_user.id)
+    if ref_data['all_income'] is None:
+        ref_data['all_income'] = 0
+    await message.answer_photo(more_api.get_qr_photo(bot_url + '?start=' + str(message.from_user.id)),
+                               caption=f'''Партнерская программа
+                               
+Сколько я буду зарабатывать?
+15% с любых пополнений
+
+Статистика:
+Всего заработано: {ref_data["all_income"]}₽
+Доступно к выводу: {ref_data["available_for_withdrawal"]}₽
+Лично приглашенных: {ref_data["count_refs"]}
+
+Ваша реферальная ссылка: {bot_url}?start={message.from_user.id}''',
+                               reply_markup=user_kb.get_ref_menu(f'{bot_url}?start={message.from_user.id}'))
 
 
 @dp.message_handler(state="*", text="⚙Аккаунт")

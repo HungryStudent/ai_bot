@@ -37,6 +37,7 @@ async def add_balance(message: Message):
         await message.answer("Команда введена неверно. Используйте /balance {id пользователя} {баланс}")
         return
     db.add_balance_from_admin(user_id, value)
+    await message.answer('Баланс изменён')
 
 
 @dp.message_handler(commands="send", user_id=admin_chat)
