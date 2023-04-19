@@ -44,17 +44,20 @@ async def ref_menu(message: Message):
     if ref_data['all_income'] is None:
         ref_data['all_income'] = 0
     await message.answer_photo(more_api.get_qr_photo(bot_url + '?start=' + str(message.from_user.id)),
-                               caption=f'''Партнерская программа
-                               
-Сколько я буду зарабатывать?
-15% с любых пополнений
+                               caption=f'''<b>🤝 Партнёрская программа</b>
+         
+<i>Приводи друзей и зарабатывай 15% с их пополнений, пожизненно!</i>
 
-Статистика:
-Всего заработано: {ref_data["all_income"]}₽
-Доступно к выводу: {ref_data["available_for_withdrawal"]}₽
-Лично приглашенных: {ref_data["count_refs"]}
+<b>⬇️ Твоя реферальная ссылка:</b>
+└ {bot_url}?start={message.from_user.id}
 
-Ваша реферальная ссылка: {bot_url}?start={message.from_user.id}''',
+<b>🏅 Статистика:</b>
+├ Лично приглашённых: <b>{ref_data["count_refs"]}</b>
+├ Количество оплат: <b>{ref_data["orders_count"]}</b>
+├ Всего заработано: <b>{ref_data["all_income"]}</b> рублей
+└ Доступно к выводу: <b>{ref_data["available_for_withdrawal"]}</b> рублей
+
+Ваша реферальная ссылка: ''',
                                reply_markup=user_kb.get_ref_menu(f'{bot_url}?start={message.from_user.id}'))
 
 

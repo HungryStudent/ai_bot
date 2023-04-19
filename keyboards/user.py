@@ -73,7 +73,7 @@ def get_other_pay(user_id, amount):
 def get_ref_menu(url):
     text_url = parse.quote(url)
     url = f'https://t.me/share/url?url={text_url}'
-    return InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton('Поделиться ссылкой', url=url),
-                                                 InlineKeyboardButton('Вывод средств',
+    return InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton('📩Поделится ссылкой', url=url),
+                                                 InlineKeyboardButton('💳Вывод средств',
                                                                       callback_data='withdraw_ref_menu'),
-                                                 InlineKeyboardButton('Назад', callback_data='check_sub'))
+                                                 InlineKeyboardButton('🔙Назад', callback_data='check_sub'))

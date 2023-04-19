@@ -103,7 +103,7 @@ def add_balance(user_id, amount):
     with closing(sqlite3.connect(database)) as connection:
         connection.row_factory = dict_factory
         cursor: Cursor = connection.cursor()
-        ref_balance = int(float(amount) * 0.2)
+        ref_balance = int(float(amount) * 0.15)
         cursor.execute("UPDATE users SET balance = balance + ? WHERE user_id = ?", (amount, user_id))
         cursor.execute(
             "UPDATE users SET ref_balance = ref_balance + ? WHERE user_id = (SELECT inviter_id FROM users WHERE user_id = ?)",
@@ -127,13 +127,22 @@ def get_ref_stat(user_id):
     with closing(sqlite3.connect(database)) as connection:
         connection.row_factory = dict_factory
         cursor: Cursor = connection.cursor()
-        cursor.execute("SELECT (SELECT sum(amount) FROM orders WHERE "
+        cursor.execute("SELECT (SELECT CAST(sum(amount) * 0.15 as int) FROM orders WHERE "
                        "EXISTS(SELECT * FROM users "
                        "WHERE inviter_id = ? AND users.user_id = orders.user_id)) as all_income,"
                        "(SELECT ref_balance FROM users WHERE user_id = ?) as available_for_withdrawal,"
-                       "(SELECT SUM(user_id) FROM users WHERE inviter_id = ?) as count_refs",
-                       (user_id, user_id, user_id))
+                       "(SELECT COUNT(user_id) FROM users WHERE inviter_id = ?) as count_refs,"
+                       "(SELECT COUNT(id) FROM orders JOIN users u ON orders.user_id = u.user_id WHERE u.inviter_id = ?) as orders_count",
+                       (user_id, user_id, user_id, user_id))
         return cursor.fetchone()
+
+
+def get_all_inviters():
+    with closing(sqlite3.connect(database)) as connection:
+        connection.row_factory = dict_factory
+        cursor: Cursor = connection.cursor()
+        cursor.execute('select distinct inviter_id from users where inviter_id != 0')
+        return cursor.fetchall()
 
 
 def add_action(user_id, ai_type):
@@ -161,6 +170,7 @@ def get_stat():
                        "as today_image_count,"
                        "(SELECT COUNT() FROM orders) as orders_count,"
                        "(SELECT SUM(amount) FROM orders) as orders_sum,"
+                       "(SELECT count(id) - count(DISTINCT user_id) FROM orders) as repeated_orders_count,"
                        "(SELECT COUNT() FROM orders WHERE pay_time between ? and ?) as today_orders_count,"
                        "(SELECT SUM(amount) FROM orders WHERE pay_time between ? and ?) as today_orders_sum",
                        (start, end, start, end, start, end, start, end, start, end))
