@@ -1,14 +1,12 @@
-import time
-
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Text
 from aiogram.types import Message, CallbackQuery, ChatActions
+from aiogram.dispatcher.filters import Text
+from aiogram.dispatcher import FSMContext
 
-from config import bot_url
+from utils import db, ai, more_api
 from states import user as states
 import keyboards.user as user_kb
+from config import bot_url
 from create_bot import dp
-from utils import db, ai, more_api
 
 
 @dp.message_handler(state="*", commands='start')

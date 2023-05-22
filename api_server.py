@@ -1,12 +1,11 @@
 from aiogram.utils.exceptions import ChatNotFound
-from fastapi import FastAPI, Request
-
-from create_bot import bot
-
-import uvicorn
 from keyboards import user as user_kb
-
+from fastapi import FastAPI, Request
+from create_bot import bot
+from io import BytesIO
 from utils import db
+import requests
+import uvicorn
 
 app = FastAPI()
 
@@ -28,8 +27,11 @@ async def get_midjourney(request: Request):
     data = await request.json()
     photo_url = data["imageUrl"]
     ds_msg_id = data["originatingMessageId"]
+    response = requests.get(photo_url)
+    img = BytesIO(response.content)
     user = db.get_user_by_ds_msg_id(ds_msg_id)
-    await bot.send_photo(user["user_id"], photo_url, reply_markup=user_kb.get_try_prompt('image'))
+
+    await bot.send_photo(user["user_id"], photo=img, reply_markup=user_kb.get_try_prompt('image'))
     if user["free_image"] > 0:
         db.remove_image(user["user_id"])
     else:

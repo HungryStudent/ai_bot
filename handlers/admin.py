@@ -1,14 +1,13 @@
-import asyncio
-
 from aiogram.types import Message, CallbackQuery
 from aiogram.dispatcher import FSMContext
 
-from config import admin_chat
-from create_bot import dp, bot
 import keyboards.admin as admin_kb
+from create_bot import dp, bot
+from config import admin_chat
+from tabulate import tabulate
 import states.admin as states
 from utils import db
-from tabulate import tabulate
+import asyncio
 
 
 @dp.message_handler(chat_id=admin_chat, commands="stats")

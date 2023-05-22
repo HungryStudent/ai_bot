@@ -1,12 +1,12 @@
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Text
 from aiogram.types import Message, CallbackQuery, ChatActions
+from aiogram.dispatcher.filters import Text
+from aiogram.dispatcher import FSMContext
 
-from config import bot_url
+from utils import db, ai, more_api
 from states import user as states
 import keyboards.user as user_kb
+from config import bot_url
 from create_bot import dp
-from utils import db, ai, more_api
 
 invalid_purse_text = {'qiwi': 'Введите корректный номер телефона. Например: 79111111111',
                       'bank_card': 'Введите корректный номер карты. Например: 4012888812345678'}
