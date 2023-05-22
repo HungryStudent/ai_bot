@@ -4,7 +4,7 @@ import asyncio
 from midjourney_api import TNL
 
 import change_token
-from config import OPENAPI_TOKEN, ya_folder, TNL_API_KEY
+from config import OPENAPI_TOKEN, ya_folder, TNL_API_KEY, midjourney_webhook_url
 from create_bot import bot
 from utils import db
 
@@ -56,5 +56,5 @@ async def get_gpt(prompt):
 
 async def get_mdjrny(prompt):
     translated_prompt = await get_translate(prompt)
-    res = tnl.imagine(translated_prompt)
+    res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url)
     return res["messageId"]
