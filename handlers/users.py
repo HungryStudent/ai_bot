@@ -237,4 +237,4 @@ async def prompt(message: Message, state: FSMContext):
         await message.answer("Ожидайте, генерирую изображение..🕙", reply_markup=user_kb.get_menu(message.from_user.id))
         await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
         ds_msg_id = await ai.get_mdjrny(message.text)
-        db.update_ds_msg_id(call.from_user.id, ds_msg_id)
+        db.update_ds_msg_id(message.from_user.id, ds_msg_id)
