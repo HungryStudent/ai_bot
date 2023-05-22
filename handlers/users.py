@@ -194,17 +194,9 @@ async def try_prompt(call: CallbackQuery, state: FSMContext):
         await call.message.answer("Ожидайте, генерирую изображение..🕙",
                                   reply_markup=user_kb.get_menu(call.from_user.id))
         await call.message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
-        photo_url = await ai.get_mdjrny(data['prompt'])
-        if photo_url == "Произошла ошибка, повторите попытку позже":
-            await call.message.answer(photo_url, reply_markup=user_kb.get_menu(call.from_user.id))
-        else:
-            await call.message.answer_photo(photo_url[0], reply_markup=user_kb.get_try_prompt('image'))
-            user = db.get_user(call.from_user.id)
-            if user["free_image"] > 0:
-                db.remove_image(call.from_user.id)
-            else:
-                db.remove_balance(call.from_user.id)
-            db.add_action(call.from_user.id, "image")
+        ds_msg_id = await ai.get_mdjrny(data['prompt'])
+        db.update_ds_msg_id(call.from_user.id, ds_msg_id)
+
     await call.answer()
 
 
@@ -244,14 +236,5 @@ async def prompt(message: Message, state: FSMContext):
                 return
         await message.answer("Ожидайте, генерирую изображение..🕙", reply_markup=user_kb.get_menu(message.from_user.id))
         await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
-        photo_url = await ai.get_mdjrny(message.text)
-        if photo_url == "Произошла ошибка, повторите попытку позже":
-            await message.answer(photo_url, reply_markup=user_kb.get_menu(message.from_user.id))
-        else:
-            await message.answer_photo(photo_url[0], reply_markup=user_kb.get_try_prompt('image'))
-            user = db.get_user(message.from_user.id)
-            if user["free_image"] > 0:
-                db.remove_image(message.from_user.id)
-            else:
-                db.remove_balance(message.from_user.id)
-            db.add_action(message.from_user.id, "image")
+        ds_msg_id = await ai.get_mdjrny(message.text)
+        db.update_ds_msg_id(call.from_user.id, ds_msg_id)

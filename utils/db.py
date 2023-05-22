@@ -17,7 +17,7 @@ def start():
     with closing(sqlite3.connect(database)) as connection:
         cursor = connection.cursor()
         cursor.execute(
-            "CREATE TABLE IF NOT EXISTS users(user_id INT, username TEXT, first_name TEXT, balance INT, reg_time INT, free_chatgpt INT, free_image INT, default_ai TEXT, inviter_id INT, ref_balance INT)")
+            "CREATE TABLE IF NOT EXISTS users(user_id INT, username TEXT, first_name TEXT, balance INT, reg_time INT, free_chatgpt INT, free_image INT, default_ai TEXT, inviter_id INT, ref_balance INT, ds_msg_id TEXT)")
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS orders(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INT, amount INT, pay_time INT)")
         cursor.execute(
@@ -56,6 +56,24 @@ def add_user(user_id, username, first_name, inviter_id):
         cursor: Cursor = connection.cursor()
         cursor.execute("INSERT INTO users VALUES (?, ?, ?, 0, ?, 3, 0, 'empty', ?, 0)",
                        (user_id, username, first_name, int(datetime.now().timestamp()), inviter_id))
+        connection.commit()
+
+
+def get_user_by_ds_msg_id(ds_msg_id):
+    with closing(sqlite3.connect(database)) as connection:
+        connection.row_factory = dict_factory
+        cursor: Cursor = connection.cursor()
+        cursor.execute(
+            "SELECT * FROM users WHERE ds_msg_id = ?",
+            (ds_msg_id,))
+        return cursor.fetchone()
+
+
+def update_ds_msg_id(user_id, ds_msg_id):
+    with closing(sqlite3.connect(database)) as connection:
+        connection.row_factory = dict_factory
+        cursor: Cursor = connection.cursor()
+        cursor.execute("UPDATE users SET ds_msg_id = ? WHERE user_id = ?", (ds_msg_id, user_id,))
         connection.commit()
 
 

@@ -1,15 +1,14 @@
-import replicate
 import aiohttp
 import asyncio
 
+from midjourney_api import TNL
+
 import change_token
-from config import OPENAPI_TOKEN, REPLICATE_API_TOKEN, ya_folder
+from config import OPENAPI_TOKEN, ya_folder, TNL_API_KEY
 from create_bot import bot
 from utils import db
 
-client = replicate.Client(api_token=REPLICATE_API_TOKEN)
-model = client.models.get("tstramer/midjourney-diffusion")
-version = model.versions.get("436b051ebd8f68d23e83d22de5e198e0995357afef113768c20f0b6fcef23c8b")
+tnl = TNL(TNL_API_KEY)
 
 
 async def get_translate(text):
@@ -29,6 +28,7 @@ async def get_translate(text):
             except KeyError:
                 change_token.start()
                 return await get_translate(text)
+
 
 async def get_gpt(prompt):
     async with aiohttp.ClientSession() as session:
@@ -56,20 +56,5 @@ async def get_gpt(prompt):
 
 async def get_mdjrny(prompt):
     translated_prompt = await get_translate(prompt)
-    try:
-        inputs = {
-            'prompt': translated_prompt,
-            'prompt_strength': 0.8,
-            'num_outputs': 1,
-            'num_inference_steps': 50,
-            'guidance_scale': 7.5,
-            'scheduler': "DPMSolverMultistep",
-        }
-        prediction = client.predictions.create(version=version, input=inputs)
-        while prediction.status != "succeeded":
-            await asyncio.sleep(5)
-            prediction.reload()
-        return prediction.output
-    except Exception as e:
-        await bot.send_message(796644977, e)
-        return "Произошла ошибка, повторите попытку позже"
+    res = tnl.imagine(translated_prompt)
+    return res["messageId"]
