@@ -157,7 +157,7 @@ async def choose_image(call: CallbackQuery):
     buttonMessageId = call.data.split(":")[1]
     image_id = int(call.data.split(":")[2])
     ai.get_choose_mdjrny(buttonMessageId, image_id, call.from_user.id)
-    await call.message.answer("Ожидайте, генерирую изображение..🕙", reply_markup=user_kb.get_menu(call.from_user.id))
+    await call.message.answer("Ожидайте, сохраняю изображение в отличном качестве…⏳", reply_markup=user_kb.get_menu(call.from_user.id))
     await call.answer()
 
 
