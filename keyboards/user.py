@@ -85,4 +85,4 @@ def get_try_prompt_or_choose(buttonMessageId):
         InlineKeyboardButton("u2", callback_data=f"choose_image:{buttonMessageId}:2"),
         InlineKeyboardButton("u3", callback_data=f"choose_image:{buttonMessageId}:3"),
         InlineKeyboardButton("u4", callback_data=f"choose_image:{buttonMessageId}:4"),
-        InlineKeyboardButton("🔄 Другой вариант", callback_data=f"try_prompt:image"))
+        InlineKeyboardButton("🔄 Ещё варианты", callback_data=f"try_prompt:image"))
