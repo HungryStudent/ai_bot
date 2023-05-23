@@ -1,6 +1,7 @@
 import aiohttp
 import asyncio
 
+import requests
 from midjourney_api import TNL
 
 import change_token
@@ -58,3 +59,7 @@ async def get_mdjrny(prompt):
     translated_prompt = await get_translate(prompt)
     res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url)
     return res["messageId"]
+
+
+def get_choose_mdjrny(buttonMessageId, image_id, user_id):
+    tnl.button(f"U{image_id}", buttonMessageId, ref=user_id, webhook_override=midjourney_webhook_url + "/choose")

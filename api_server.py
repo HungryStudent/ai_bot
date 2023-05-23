@@ -31,12 +31,21 @@ async def get_midjourney(request: Request):
     img = BytesIO(response.content)
     user = db.get_user_by_ds_msg_id(ds_msg_id)
 
-    await bot.send_photo(user["user_id"], photo=img, reply_markup=user_kb.get_try_prompt('image'))
+    await bot.send_photo(user["user_id"], photo=img,
+                         reply_markup=user_kb.get_try_prompt_or_choose(data["buttonMessageId"]))
     if user["free_image"] > 0:
         db.remove_image(user["user_id"])
     else:
         db.remove_balance(user["user_id"])
     db.add_action(user["user_id"], "image")
+
+
+@app.post('/api/midjourney/choose')
+async def get_midjourney(request: Request):
+    data = await request.json()
+    user_id = int(data["ref"])
+    photo_url = data["imageUrl"]
+    await bot.send_photo(user_id, photo_url)
 
 
 if __name__ == "__main__":

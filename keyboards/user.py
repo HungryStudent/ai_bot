@@ -77,3 +77,12 @@ def get_ref_menu(url):
                                                  InlineKeyboardButton('💳Вывод средств',
                                                                       callback_data='withdraw_ref_menu'),
                                                  InlineKeyboardButton('🔙Назад', callback_data='check_sub'))
+
+
+def get_try_prompt_or_choose(buttonMessageId):
+    return InlineKeyboardMarkup(row_width=2).add(
+        InlineKeyboardButton("u1", callback_data=f"choose_image:{buttonMessageId}:1"),
+        InlineKeyboardButton("u2", callback_data=f"choose_image:{buttonMessageId}:2"),
+        InlineKeyboardButton("u3", callback_data=f"choose_image:{buttonMessageId}:3"),
+        InlineKeyboardButton("u4", callback_data=f"choose_image:{buttonMessageId}:4"),
+        InlineKeyboardButton("🔄 Другой вариант", callback_data=f"try_prompt:image"))

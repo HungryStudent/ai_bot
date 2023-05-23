@@ -152,6 +152,15 @@ async def cancel(message: Message, state: FSMContext):
     await message.answer("Ввод остановлен", reply_markup=user_kb.get_menu(message.from_user.id))
 
 
+@dp.callback_query_handler(Text(startswith="choose_image:"))
+async def choose_image(call: CallbackQuery):
+    buttonMessageId = call.data.split(":")[1]
+    image_id = int(call.data.split(":")[2])
+    ai.get_choose_mdjrny(buttonMessageId, image_id, call.from_user.id)
+    await call.message.answer("Ожидайте, генерирую изображение..🕙", reply_markup=user_kb.get_menu(call.from_user.id))
+    await call.answer()
+
+
 @dp.callback_query_handler(Text(startswith="try_prompt"))
 async def try_prompt(call: CallbackQuery, state: FSMContext):
     data = await state.get_data()
