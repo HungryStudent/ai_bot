@@ -26,18 +26,21 @@ async def check_pay_freekassa(MERCHANT_ORDER_ID, AMOUNT):
 async def get_midjourney(request: Request):
     data = await request.json()
     photo_url = data["imageUrl"]
-    ds_msg_id = data["originatingMessageId"]
+    user_id = int(data["ref"])
+    if photo_url == "":
+        await bot.send_message(user_id, "Изображение не сгенерировано, попробуйте другой запрос")
+        return
     response = requests.get(photo_url)
     img = BytesIO(response.content)
-    user = db.get_user_by_ds_msg_id(ds_msg_id)
 
-    await bot.send_photo(user["user_id"], photo=img,
+    user = db.get_user(user_id)
+    await bot.send_photo(user_id, photo=img,
                          reply_markup=user_kb.get_try_prompt_or_choose(data["buttonMessageId"]))
     if user["free_image"] > 0:
-        db.remove_image(user["user_id"])
+        db.remove_image(user_id)
     else:
-        db.remove_balance(user["user_id"])
-    db.add_action(user["user_id"], "image")
+        db.remove_balance(user_id)
+    db.add_action(user_id, "image")
 
 
 @app.post('/api/midjourney/choose')

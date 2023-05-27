@@ -1,3 +1,5 @@
+import io
+
 from aiogram.types import Message, CallbackQuery, ChatActions
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
@@ -5,7 +7,7 @@ from aiogram.dispatcher import FSMContext
 from utils import db, ai, more_api
 from states import user as states
 import keyboards.user as user_kb
-from config import bot_url
+from config import bot_url, TOKEN
 from create_bot import dp
 
 
@@ -157,7 +159,8 @@ async def choose_image(call: CallbackQuery):
     buttonMessageId = call.data.split(":")[1]
     image_id = int(call.data.split(":")[2])
     ai.get_choose_mdjrny(buttonMessageId, image_id, call.from_user.id)
-    await call.message.answer("Ожидайте, сохраняю изображение в отличном качестве…⏳", reply_markup=user_kb.get_menu(call.from_user.id))
+    await call.message.answer("Ожидайте, сохраняю изображение в отличном качестве…⏳",
+                              reply_markup=user_kb.get_menu(call.from_user.id))
     await call.answer()
 
 
@@ -201,8 +204,7 @@ async def try_prompt(call: CallbackQuery, state: FSMContext):
         await call.message.answer("Ожидайте, генерирую изображение..🕙",
                                   reply_markup=user_kb.get_menu(call.from_user.id))
         await call.message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
-        ds_msg_id = await ai.get_mdjrny(data['prompt'])
-        db.update_ds_msg_id(call.from_user.id, ds_msg_id)
+        await ai.get_mdjrny(data['prompt'], call.from_user.id)
 
     await call.answer()
 
@@ -243,5 +245,28 @@ async def prompt(message: Message, state: FSMContext):
                 return
         await message.answer("Ожидайте, генерирую изображение..🕙", reply_markup=user_kb.get_menu(message.from_user.id))
         await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
-        ds_msg_id = await ai.get_mdjrny(message.text)
-        db.update_ds_msg_id(message.from_user.id, ds_msg_id)
+        await ai.get_mdjrny(message.text, message.from_user.id)
+
+
+@dp.message_handler(content_types="photo")
+async def photo_imagine(message: Message):
+    if message.caption is None:
+        await message.answer("Добавьте описание к фотографии")
+        return
+    file = await message.photo[-1].get_file()
+    photo_url = f"https://api.telegram.org/file/bot{TOKEN}/{file.file_path}"
+    ds_photo_url = await more_api.upload_photo_to_host(photo_url)
+    prompt = ds_photo_url + " " + message.caption
+    user = db.get_user(message.from_user.id)
+    if user["balance"] < 10:
+        if user["free_image"] == 0:
+            await message.answer("""<i>Упс.. 
+Недостаточно средств
+
+1 запрос - 10 рублей</i>
+
+Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
+            return
+    await message.answer("Ожидайте, генерирую изображение..🕙", reply_markup=user_kb.get_menu(message.from_user.id))
+    await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
+    await ai.get_mdjrny(prompt, message.from_user.id)

@@ -55,9 +55,9 @@ async def get_gpt(prompt):
                 return "Генерация текста в данный момент недоступна, попробуйте чуть позже"
 
 
-async def get_mdjrny(prompt):
+async def get_mdjrny(prompt, user_id):
     translated_prompt = await get_translate(prompt)
-    res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url)
+    res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url, ref=user_id)
     return res["messageId"]
 
 

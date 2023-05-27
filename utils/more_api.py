@@ -1,8 +1,10 @@
+import base64
 from io import BytesIO
 
+import aiohttp
 import requests
 import hashlib
-from config import FKWallet
+from config import FKWallet, IMGBB_API_KEY
 
 fkwallet_currencies = {'qiwi': 63, 'bank_card': 94}
 
@@ -26,3 +28,12 @@ def withdraw_ref_balance(purse, amount, currency):
     })
     print(response.json())
     return response.json()
+
+
+async def upload_photo_to_host(photo):
+    async with aiohttp.ClientSession() as session:
+        payload = {"image": photo}
+        async with session.post(
+                f'https://api.imgbb.com/1/upload?key={IMGBB_API_KEY}', data=payload) as resp:
+            data = await resp.json()
+            return data["data"]["url"]

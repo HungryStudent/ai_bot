@@ -16,7 +16,7 @@ class CheckRegMiddleware(BaseMiddleware):
             user_id = update.callback_query.from_user.id
         else:
             return
-        if update.message and '/start' in update.message.text:
+        if update.message.photo is None and update.message and '/start' in update.message.text:
             return
         try:
             status: ChatMember = await bot.get_chat_member(channel_id, user_id)
