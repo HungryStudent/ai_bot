@@ -42,10 +42,9 @@ async def get_midjourney(user_id: int, request: Request):
 
 
 @app.post('/api/midjourney/choose')
-async def get_midjourney(request: Request):
+async def get_midjourney(user_id: int, request: Request):
     data = await request.json()
-    user_id = int(data["ref"])
-    photo_url = data["imageUrl"]
+    photo_url = data["imageURL"]
     await bot.send_photo(user_id, photo_url)
 
 

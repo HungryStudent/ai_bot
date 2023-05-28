@@ -69,4 +69,16 @@ async def get_mdjrny(prompt, user_id):
 
 
 def get_choose_mdjrny(buttonMessageId, image_id, user_id):
-    tnl.button(f"U{image_id}", buttonMessageId, ref=user_id, webhook_override=midjourney_webhook_url + "/choose")
+    headers = {
+        'Authorization': MJ_API_KEY,
+        'Content-Type': 'application/json'
+    }
+    payload = {
+        "taskId": buttonMessageId,
+        "position": image_id
+    }
+    res = requests.post("https://api.midjourneyapi.io/v2/upscale", headers=headers, json=payload)
+    data = res.json()
+    if "errors" in data:
+        pass
+    return data["imageURL"]

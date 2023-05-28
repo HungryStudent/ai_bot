@@ -158,9 +158,8 @@ async def cancel(message: Message, state: FSMContext):
 async def choose_image(call: CallbackQuery):
     buttonMessageId = call.data.split(":")[1]
     image_id = int(call.data.split(":")[2])
-    ai.get_choose_mdjrny(buttonMessageId, image_id, call.from_user.id)
-    await call.message.answer("Ожидайте, сохраняю изображение в отличном качестве…⏳",
-                              reply_markup=user_kb.get_menu(call.from_user.id))
+    photo_url = ai.get_choose_mdjrny(buttonMessageId, image_id, call.from_user.id)
+    await call.message.answer(photo_url)
     await call.answer()
 
 
@@ -204,7 +203,10 @@ async def try_prompt(call: CallbackQuery, state: FSMContext):
         await call.message.answer("Ожидайте, генерирую изображение..🕙",
                                   reply_markup=user_kb.get_menu(call.from_user.id))
         await call.message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
-        await ai.get_mdjrny(data['prompt'], call.from_user.id)
+        res = await ai.get_mdjrny(data['prompt'], call.from_user.id)
+        if res == "banned word error":
+            await call.message.answer("Найдено запрещённое слово, попробуйте ввести другой запрос")
+        db.update_task_id(call.from_user.id, res)
 
     await call.answer()
 
@@ -272,4 +274,7 @@ async def photo_imagine(message: Message):
             return
     await message.answer("Ожидайте, генерирую изображение..🕙", reply_markup=user_kb.get_menu(message.from_user.id))
     await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
-    await ai.get_mdjrny(prompt, message.from_user.id)
+    res = await ai.get_mdjrny(prompt, message.from_user.id)
+    if res == "banned word error":
+        await call.message.answer("Найдено запрещённое слово, попробуйте ввести другой запрос")
+    db.update_task_id(call.from_user.id, res)

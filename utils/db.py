@@ -17,7 +17,7 @@ def start():
     with closing(sqlite3.connect(database)) as connection:
         cursor = connection.cursor()
         cursor.execute(
-            "CREATE TABLE IF NOT EXISTS users(user_id INT, username TEXT, first_name TEXT, balance INT, reg_time INT, free_chatgpt INT, free_image INT, default_ai TEXT, inviter_id INT, ref_balance INT, task_id INT DEFAULT NULL)")
+            "CREATE TABLE IF NOT EXISTS users(user_id INT, username TEXT, first_name TEXT, balance INT, reg_time INT, free_chatgpt INT, free_image INT, default_ai TEXT, inviter_id INT, ref_balance INT, task_id TEXT DEFAULT NULL)")
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS orders(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INT, amount INT, pay_time INT)")
         cursor.execute(
@@ -45,7 +45,7 @@ def get_user(user_id):
         connection.row_factory = dict_factory
         cursor: Cursor = connection.cursor()
         cursor.execute(
-            "SELECT user_id, balance, ref_balance, free_chatgpt, free_image, default_ai FROM users WHERE user_id = ?",
+            "SELECT * FROM users WHERE user_id = ?",
             (user_id,))
         return cursor.fetchone()
 
@@ -58,12 +58,14 @@ def add_user(user_id, username, first_name, inviter_id):
                        (user_id, username, first_name, int(datetime.now().timestamp()), inviter_id))
         connection.commit()
 
+
 def update_task_id(user_id, task_id):
     with closing(sqlite3.connect(database)) as connection:
         connection.row_factory = dict_factory
         cursor: Cursor = connection.cursor()
         cursor.execute("UPDATE users SET task_id = ? WHERE user_id = ?", (task_id, user_id,))
         connection.commit()
+
 
 def change_default_ai(user_id, ai_type):
     with closing(sqlite3.connect(database)) as connection:
