@@ -124,7 +124,7 @@ async def gen_img(message: Message, state: FSMContext):
     db.change_default_ai(message.from_user.id, "image")
     await message.answer("""<b>Введите запрос для генерации изображения</b>
 
-Например: <code>Замерзшее прозрачное озеро вокруг заснеженных горных вершин</code>
+Например: <code>Замерзшее бирюзовое озеро вокруг заснеженных горных вершин</code>
 
 <u><i>Английский язык бот понимает лучше.</i></u>
 
