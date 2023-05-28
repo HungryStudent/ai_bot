@@ -1,15 +1,10 @@
 import aiohttp
-import asyncio
-
 import requests
-from midjourney_api import TNL
 
 import change_token
-from config import OPENAPI_TOKEN, ya_folder, TNL_API_KEY, midjourney_webhook_url
+from config import OPENAPI_TOKEN, ya_folder, midjourney_webhook_url, MJ_API_KEY
 from create_bot import bot
 from utils import db
-
-tnl = TNL(TNL_API_KEY)
 
 
 async def get_translate(text):
@@ -57,8 +52,20 @@ async def get_gpt(prompt):
 
 async def get_mdjrny(prompt, user_id):
     translated_prompt = await get_translate(prompt)
-    res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url, ref=user_id)
-    return res["messageId"]
+    headers = {
+        'Authorization': MJ_API_KEY,
+        'Content-Type': 'application/json'
+    }
+    payload = {
+        "callbackURL": midjourney_webhook_url + f"?user_id={user_id}",
+        "prompt": translated_prompt
+    }
+    res = requests.post("https://api.midjourneyapi.io/v2/imagine", headers=headers, json=payload)
+    data = res.json()
+    if "errors" in data:
+        if "Prompt contains banned word" in data["errors"][0]["msg"]:
+            return "banned word error"
+    return data["taskId"]
 
 
 def get_choose_mdjrny(buttonMessageId, image_id, user_id):

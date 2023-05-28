@@ -245,7 +245,10 @@ async def prompt(message: Message, state: FSMContext):
                 return
         await message.answer("Ожидайте, генерирую изображение..🕙", reply_markup=user_kb.get_menu(message.from_user.id))
         await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
-        await ai.get_mdjrny(message.text, message.from_user.id)
+        res = await ai.get_mdjrny(message.text, message.from_user.id)
+        if res == "banned word error":
+            await message.answer("Найдено запрещённое слово, попробуйте ввести другой запрос")
+        db.update_task_id(message.from_user.id, res)
 
 
 @dp.message_handler(content_types="photo")
