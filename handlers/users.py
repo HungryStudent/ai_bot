@@ -159,7 +159,7 @@ async def choose_image(call: CallbackQuery):
     buttonMessageId = call.data.split(":")[1]
     image_id = int(call.data.split(":")[2])
     photo_url = ai.get_choose_mdjrny(buttonMessageId, image_id, call.from_user.id)
-    await call.message.answer(photo_url)
+    await call.message.answer_photo(photo_url)
     await call.answer()
 
 
