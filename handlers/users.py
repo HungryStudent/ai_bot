@@ -158,7 +158,12 @@ async def cancel(message: Message, state: FSMContext):
 async def choose_image(call: CallbackQuery):
     buttonMessageId = call.data.split(":")[1]
     image_id = int(call.data.split(":")[2])
-    photo_url = ai.get_choose_mdjrny(buttonMessageId, image_id, call.from_user.id)
+    try:
+        photo_url = ai.get_choose_mdjrny(buttonMessageId, image_id, call.from_user.id)
+    except KeyError:
+        await call.message.answer("Произошла ошибка, повторите попытку позднее")
+        await call.answer()
+        return
     await call.message.answer_photo(photo_url)
     await call.answer()
 
@@ -277,4 +282,4 @@ async def photo_imagine(message: Message):
     res = await ai.get_mdjrny(prompt, message.from_user.id)
     if res == "banned word error":
         await call.message.answer("Найдено запрещённое слово, попробуйте ввести другой запрос")
-    db.update_task_id(call.from_user.id, res)
+    db.update_task_id(message.from_user.id, res)
