@@ -156,6 +156,7 @@ async def cancel(message: Message, state: FSMContext):
 
 @dp.callback_query_handler(Text(startswith="choose_image:"))
 async def choose_image(call: CallbackQuery):
+    await call.answer()
     buttonMessageId = call.data.split(":")[1]
     image_id = int(call.data.split(":")[2])
     try:
@@ -165,7 +166,7 @@ async def choose_image(call: CallbackQuery):
         await call.answer()
         return
     await call.message.answer_photo(photo_url)
-    await call.answer()
+
 
 
 @dp.callback_query_handler(Text(startswith="try_prompt"))
