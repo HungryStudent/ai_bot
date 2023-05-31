@@ -1,6 +1,4 @@
-import io
-
-from aiogram.types import Message, CallbackQuery, ChatActions
+from aiogram.types import Message, CallbackQuery, ChatActions, Update
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 
@@ -168,7 +166,6 @@ async def choose_image(call: CallbackQuery):
     await call.message.answer_photo(photo_url)
 
 
-
 @dp.callback_query_handler(Text(startswith="try_prompt"))
 async def try_prompt(call: CallbackQuery, state: FSMContext):
     data = await state.get_data()
@@ -282,5 +279,5 @@ async def photo_imagine(message: Message):
     await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
     res = await ai.get_mdjrny(prompt, message.from_user.id)
     if res == "banned word error":
-        await call.message.answer("Найдено запрещённое слово, попробуйте ввести другой запрос")
+        await message.answer("Найдено запрещённое слово, попробуйте ввести другой запрос")
     db.update_task_id(message.from_user.id, res)
