@@ -23,28 +23,28 @@ async def check_pay_freekassa(MERCHANT_ORDER_ID, AMOUNT):
 
 
 @app.post('/api/midjourney')
-async def get_midjourney(user_id: int, request: Request):
+async def get_midjourney(request: Request):
     data = await request.json()
-    if "imageURL" not in data:
-        return
-    photo_url = data["imageURL"]
+    photo_url = data["imageUrl"]
     response = requests.get(photo_url)
     img = BytesIO(response.content)
+    user_id = int(data["ref"])
+    user = db.get_user(user_id)
 
-    user = await db.get_user(user_id)
-    await bot.send_photo(user_id, photo=img,
-                         reply_markup=user_kb.get_try_prompt_or_choose(user["task_id"]))
+    await bot.send_photo(user["user_id"], photo=img,
+                         reply_markup=user_kb.get_try_prompt_or_choose(data["buttonMessageId"]))
     if user["free_image"] > 0:
-        await db.remove_image(user_id)
+        await db.remove_image(user["user_id"])
     else:
-        await db.remove_balance(user_id)
-    await db.add_action(user_id, "image")
+        await db.remove_balance(user["user_id"])
+    await db.add_action(user["user_id"], "image")
 
 
 @app.post('/api/midjourney/choose')
-async def get_midjourney(user_id: int, request: Request):
+async def get_midjourney(request: Request):
     data = await request.json()
-    photo_url = data["imageURL"]
+    user_id = int(data["ref"])
+    photo_url = data["imageUrl"]
     await bot.send_photo(user_id, photo_url)
 
 
