@@ -10,6 +10,9 @@ from utils import db
 tnl = TNL(TNL_API_KEY)
 
 
+def reserve_mj():
+    pass
+
 async def get_translate(text):
     iam_token = await db.get_iam_token()
     async with aiohttp.ClientSession() as session:
@@ -59,6 +62,20 @@ async def get_mdjrny(prompt, user_id):
         res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url, ref=user_id)
         status = res["success"]
     except requests.exceptions.JSONDecodeError:
+        headers = {
+            'Authorization': MJ_API_KEY,
+            'Content-Type': 'application/json'
+        }
+        payload = {
+            "callbackURL": midjourney_webhook_url + f"?user_id={user_id}",
+            "prompt": translated_prompt
+        }
+        res = requests.post("https://api.midjourneyapi.io/v2/imagine", headers=headers, json=payload)
+        data = res.json()
+        if "errors" in data:
+            if "Prompt contains banned word" in data["errors"][0]["msg"]:
+                return "banned word error"
+        return data["taskId"]
         status = False
     return {"status": status}
     #
@@ -79,8 +96,13 @@ async def get_mdjrny(prompt, user_id):
 
 
 def get_choose_mdjrny(buttonMessageId, image_id, user_id):
-    res = tnl.button(f"U{image_id}", buttonMessageId, ref=user_id, webhook_override=midjourney_webhook_url + "/choose")
-    return {"status": res["success"]}
+    try:
+        res = tnl.button(f"U{image_id}", buttonMessageId, ref=user_id,
+                         webhook_override=midjourney_webhook_url + "/choose")
+        status = res["success"]
+    except requests.exceptions.JSONDecodeError:
+        status = False
+    return {"status": status}
     #
     # headers = {
     #     'Authorization': MJ_API_KEY,

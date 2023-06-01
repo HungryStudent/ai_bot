@@ -146,18 +146,18 @@ async def get_stat():
     start = int(datetime.combine(date.today(), time()).timestamp())
 
     conn: Connection = await get_conn()
-    row = await conn.fetchrow("SELECT (SELECT COUNT() FROM users) as users_count,"
-                              "(SELECT COUNT() FROM users where reg_time between $1 and $2) as today_users_count,"
-                              "(SELECT COUNT() FROM usage WHERE ai_type = 'chatgpt') as chatgpt_count,"
-                              "(SELECT COUNT() FROM usage WHERE ai_type = 'image') as image_count,"
-                              "(SELECT COUNT() FROM usage WHERE ai_type = 'chatgpt' and use_time between $1 and $2) "
+    row = await conn.fetchrow("SELECT (SELECT COUNT(*) FROM users) as users_count,"
+                              "(SELECT COUNT(*) FROM users where reg_time between $1 and $2) as today_users_count,"
+                              "(SELECT COUNT(*) FROM usage WHERE ai_type = 'chatgpt') as chatgpt_count,"
+                              "(SELECT COUNT(*) FROM usage WHERE ai_type = 'image') as image_count,"
+                              "(SELECT COUNT(*) FROM usage WHERE ai_type = 'chatgpt' and use_time between $1 and $2) "
                               "as today_chatgpt_count,"
-                              "(SELECT COUNT() FROM usage WHERE ai_type = 'image' and use_time between $1 and $2) "
+                              "(SELECT COUNT(*) FROM usage WHERE ai_type = 'image' and use_time between $1 and $2) "
                               "as today_image_count,"
-                              "(SELECT COUNT() FROM orders) as orders_count,"
+                              "(SELECT COUNT(*) FROM orders) as orders_count,"
                               "(SELECT SUM(amount) FROM orders) as orders_sum,"
                               "(SELECT count(id) - count(DISTINCT user_id) FROM orders) as repeated_orders_count,"
-                              "(SELECT COUNT() FROM orders WHERE pay_time between $1 and $2) as today_orders_count,"
+                              "(SELECT COUNT(*) FROM orders WHERE pay_time between $1 and $2) as today_orders_count,"
                               "(SELECT SUM(amount) FROM orders WHERE pay_time between $1 and $2) as today_orders_sum",
                               start, end)
     await conn.close()
