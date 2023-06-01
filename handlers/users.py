@@ -207,7 +207,7 @@ async def try_prompt(call: CallbackQuery, state: FSMContext):
         await call.message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
         res = await ai.get_mdjrny(data['prompt'], call.from_user.id)
         if not res["status"]:
-            pass
+            await call.message.answer("Произошла ошибка, повторите запрос позже")
 
     await call.answer()
 
@@ -250,9 +250,8 @@ async def prompt(message: Message, state: FSMContext):
                              reply_markup=await user_kb.get_menu(message.from_user.id))
         await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
         res = await ai.get_mdjrny(message.text, message.from_user.id)
-        if res == "banned word error":
-            await message.answer("Найдено запрещённое слово, попробуйте ввести другой запрос")
-        await db.update_task_id(message.from_user.id, res)
+        if not res["status"]:
+            await message.answer("Произошла ошибка, повторите запрос позже")
 
 
 @dp.message_handler(content_types="photo")
@@ -279,4 +278,4 @@ async def photo_imagine(message: Message):
     await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
     res = await ai.get_mdjrny(prompt, message.from_user.id)
     if not res["status"]:
-        pass
+        await message.answer("Произошла ошибка, повторите запрос позже")

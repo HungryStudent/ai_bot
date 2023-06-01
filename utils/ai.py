@@ -55,8 +55,12 @@ async def get_gpt(prompt):
 
 async def get_mdjrny(prompt, user_id):
     translated_prompt = await get_translate(prompt)
-    res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url, ref=user_id)
-    return {"status": res["success"]}
+    try:
+        res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url, ref=user_id)
+        status = res["success"]
+    except requests.exceptions.JSONDecodeError:
+        status = False
+    return {"status": status}
     #
     # headers = {
     #     'Authorization': MJ_API_KEY,
