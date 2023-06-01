@@ -32,8 +32,8 @@ def get_try_prompt(ai_type):
         InlineKeyboardButton("🔄 Другой вариант", callback_data=f"try_prompt:{ai_type}"))
 
 
-def get_menu(user_id):
-    user = db.get_user(user_id)
+async def get_menu(user_id):
+    user = await db.get_user(user_id)
     if user["default_ai"] == "chatgpt":
         return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬Текст✅"),
                                                                           KeyboardButton("🎨Изображение"),

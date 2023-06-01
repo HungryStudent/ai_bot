@@ -8,7 +8,7 @@ from utils import db
 
 
 async def get_translate(text):
-    iam_token = db.get_iam_token()
+    iam_token = await db.get_iam_token()
     async with aiohttp.ClientSession() as session:
         async with session.post('https://translate.api.cloud.yandex.net/translate/v2/translate',
                                 headers={'Authorization': f'Bearer {iam_token}',

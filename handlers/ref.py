@@ -14,7 +14,7 @@ invalid_purse_text = {'qiwi': 'Введите корректный номер т
 
 @dp.callback_query_handler(text='withdraw_ref_menu')
 async def withdraw_ref_menu(call: CallbackQuery):
-    user = db.get_user(call.from_user.id)
+    user = await db.get_user(call.from_user.id)
     if user['ref_balance'] >= 100:
         await call.message.answer(
             f'''<b>💸 Вывод средств</b>
@@ -36,7 +36,7 @@ async def withdraw_ref(call: CallbackQuery, state: FSMContext):
     elif withdraw_type == 'qiwi':
         await call.message.answer('Введите номер телефона. Например: 79111111111', reply_markup=user_kb.cancel)
     elif withdraw_type == 'balance':
-        db.add_balance_from_ref(call.from_user.id)
+        await db.add_balance_from_ref(call.from_user.id)
         await call.message.answer('Средства зачислены на баланс')
         return
 
@@ -62,7 +62,7 @@ async def finish_withdraw_ref(message: Message, state: FSMContext):
         if len(str(purse)) != 16:
             await message.answer(invalid_purse_text[withdraw_type])
             return
-    user = db.get_user(message.from_user.id)
+    user = await db.get_user(message.from_user.id)
     withdraw_data = more_api.withdraw_ref_balance(purse, user['ref_balance'], withdraw_type)
     if withdraw_data['status'] == 'error':
         if withdraw_data['desc'].startswith('Invalid Purse'):
@@ -71,6 +71,6 @@ async def finish_withdraw_ref(message: Message, state: FSMContext):
         else:
             await message.answer(f'Произошла ошибка, отправьте её администратору: {withdraw_data["desc"]}')
 
-    db.add_withdraw(message.from_user.id, user['ref_balance'])
-    db.reset_ref_balance(message.from_user.id)
+    await db.add_withdraw(message.from_user.id, user['ref_balance'])
+    await db.reset_ref_balance(message.from_user.id)
     await message.answer('Деньги будут скоро зачислены')

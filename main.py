@@ -10,7 +10,7 @@ from handlers import users
 
 
 async def on_startup(_):
-    db.start()
+    await db.start()
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ app = FastAPI()
 
 @app.get('/api/pay/freekassa')
 async def check_pay_freekassa(MERCHANT_ORDER_ID, AMOUNT):
-    db.add_balance(MERCHANT_ORDER_ID, AMOUNT)
+    await db.add_balance(MERCHANT_ORDER_ID, AMOUNT)
     try:
         await bot.send_message(MERCHANT_ORDER_ID, "💰Баланс успешно пополнен!")
     except ChatNotFound:
@@ -31,14 +31,14 @@ async def get_midjourney(user_id: int, request: Request):
     response = requests.get(photo_url)
     img = BytesIO(response.content)
 
-    user = db.get_user(user_id)
+    user = await db.get_user(user_id)
     await bot.send_photo(user_id, photo=img,
                          reply_markup=user_kb.get_try_prompt_or_choose(user["task_id"]))
     if user["free_image"] > 0:
-        db.remove_image(user_id)
+        await db.remove_image(user_id)
     else:
-        db.remove_balance(user_id)
-    db.add_action(user_id, "image")
+        await db.remove_balance(user_id)
+    await db.add_action(user_id, "image")
 
 
 @app.post('/api/midjourney/choose')

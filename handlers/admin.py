@@ -12,7 +12,7 @@ import asyncio
 
 @dp.message_handler(chat_id=admin_chat, commands="stats")
 async def show_stats(message: Message):
-    stats_data = db.get_stat()
+    stats_data = await db.get_stat()
     await message.answer(f"""Количество пользователей: {stats_data['users_count']}
 За сегодня: {stats_data['today_users_count']}
 
@@ -32,10 +32,10 @@ async def show_stats(message: Message):
 
 @dp.callback_query_handler(text='admin_ref_menu')
 async def admin_ref_menu(call: CallbackQuery):
-    inviters_id = db.get_all_inviters()
+    inviters_id = await db.get_all_inviters()
     inviters = []
     for inviter_id in inviters_id:
-        inviter = db.get_ref_stat(inviter_id['inviter_id'])
+        inviter = await db.get_ref_stat(inviter_id['inviter_id'])
         if inviter['all_income'] is None:
             inviter['all_income'] = 0
 
@@ -56,7 +56,7 @@ async def add_balance(message: Message):
     except ValueError:
         await message.answer("Команда введена неверно. Используйте /balance {id пользователя} {баланс}")
         return
-    db.add_balance_from_admin(user_id, value)
+    await db.add_balance_from_admin(user_id, value)
     await message.answer('Баланс изменён')
 
 
@@ -70,7 +70,7 @@ async def enter_text(message: Message):
 async def start_send(message: Message, state: FSMContext):
     await message.answer("Начал рассылку")
     await state.finish()
-    users = db.get_users()
+    users = await db.get_users()
     count = 0
     block_count = 0
     for user in users:
