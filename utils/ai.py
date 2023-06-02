@@ -1,10 +1,10 @@
 import aiohttp
 import requests
+from aiogram import Bot
 from midjourney_api import TNL
 
 import change_token
-from config import OPENAPI_TOKEN, ya_folder, midjourney_webhook_url, MJ_API_KEY, TNL_API_KEY
-from create_bot import bot
+from config import OPENAPI_TOKEN, ya_folder, midjourney_webhook_url, MJ_API_KEY, TNL_API_KEY, TOKEN
 from utils import db
 
 tnl = TNL(TNL_API_KEY)
@@ -12,6 +12,7 @@ tnl = TNL(TNL_API_KEY)
 
 def reserve_mj():
     pass
+
 
 async def get_translate(text):
     iam_token = await db.get_iam_token()
@@ -49,7 +50,8 @@ async def get_gpt(prompt):
             try:
                 return response["choices"][0]["text"]
             except KeyError:
-                await bot.send_message(796644977, response["error"]["message"])
+                my_bot = Bot(TOKEN)
+                await my_bot.send_message(796644977, response["error"]["message"])
                 print(f"Ошибка {response}")
                 if "That model is currently overloaded with other requests" in response["error"]["message"]:
                     return "Модель ChatGPT сейчас перегружена запросами, повторите запрос позже."
@@ -61,6 +63,9 @@ async def get_mdjrny(prompt, user_id):
     try:
         res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url, ref=user_id)
         status = res["success"]
+        if not status:
+            my_bot = Bot(TOKEN)
+            await my_bot.send_message(796644977, res)
     except requests.exceptions.JSONDecodeError:
         headers = {
             'Authorization': MJ_API_KEY,

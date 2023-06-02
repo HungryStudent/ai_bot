@@ -4,7 +4,7 @@ from aiogram.types import Update, ChatMember
 from aiogram.utils.exceptions import ChatNotFound
 
 from keyboards import user as user_kb
-from config import admin_chat, channel_id
+from config import channel_id, ADMINS
 from create_bot import bot
 
 
@@ -33,4 +33,4 @@ class CheckRegMiddleware(BaseMiddleware):
                 raise CancelHandler()
         except ChatNotFound as e:
             print(e)
-            await bot.send_message(admin_chat, "Проблема с каналом партнером")
+            await bot.send_message(ADMINS[0], "Проблема с каналом партнером")

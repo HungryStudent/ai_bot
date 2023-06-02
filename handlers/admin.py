@@ -3,14 +3,13 @@ from aiogram.dispatcher import FSMContext
 
 import keyboards.admin as admin_kb
 from create_bot import dp, bot
-from config import admin_chat
 from tabulate import tabulate
 import states.admin as states
 from utils import db
 import asyncio
 
 
-@dp.message_handler(chat_id=admin_chat, commands="stats")
+@dp.message_handler(is_admin=True, commands="stats")
 async def show_stats(message: Message):
     stats_data = await db.get_stat()
     await message.answer(f"""Количество пользователей: {stats_data['users_count']}
@@ -30,7 +29,7 @@ async def show_stats(message: Message):
                          reply_markup=admin_kb.ref_menu)
 
 
-@dp.callback_query_handler(text='admin_ref_menu')
+@dp.callback_query_handler(is_admin=True, text='admin_ref_menu')
 async def admin_ref_menu(call: CallbackQuery):
     inviters_id = await db.get_all_inviters()
     inviters = []
@@ -49,7 +48,7 @@ async def admin_ref_menu(call: CallbackQuery):
     await call.answer()
 
 
-@dp.message_handler(commands="balance", user_id=admin_chat)
+@dp.message_handler(commands="balance", is_admin=True)
 async def add_balance(message: Message):
     try:
         user_id, value = message.get_args().split(" ")
@@ -60,13 +59,13 @@ async def add_balance(message: Message):
     await message.answer('Баланс изменён')
 
 
-@dp.message_handler(commands="send", user_id=admin_chat)
+@dp.message_handler(commands="send", is_admin=True)
 async def enter_text(message: Message):
     await message.answer("Введите текст рассылки", reply_markup=admin_kb.cancel)
     await states.Mailing.enter_text.set()
 
 
-@dp.message_handler(state=states.Mailing.enter_text, user_id=admin_chat)
+@dp.message_handler(state=states.Mailing.enter_text, is_admin=True)
 async def start_send(message: Message, state: FSMContext):
     await message.answer("Начал рассылку")
     await state.finish()
