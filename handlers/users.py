@@ -183,7 +183,7 @@ async def choose_image(call: CallbackQuery):
     if not res["status"]:
         await call.message.answer("Произошла ошибка, повторите попытку позже")
     elif mj_api == "reserve":
-        await call.message.answer_photo(res)
+        await call.message.answer_photo(res["image_url"])
 
 
 @dp.callback_query_handler(Text(startswith="try_prompt"))
