@@ -1,3 +1,4 @@
+from aiogram import Bot
 from aiogram.types import Message, CallbackQuery, ChatActions, Update
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
@@ -7,6 +8,22 @@ from states import user as states
 import keyboards.user as user_kb
 from config import bot_url, TOKEN
 from create_bot import dp
+
+
+async def get_mj(prompt, user_id, bot: Bot):
+    await bot.send_message(user_id, "Ожидайте, генерирую изображение..🕙",
+                           reply_markup=await user_kb.get_menu(user_id))
+    await bot.send_chat_action(user_id, ChatActions.UPLOAD_PHOTO)
+
+    res = await ai.get_mdjrny(prompt, user_id)
+    print(res)
+    if not res["status"]:
+        msg_text = "Произошла ошибка, повторите попытку позже"
+        if res["error"] == "banned word error":
+            msg_text = "Запрещённое слово"
+        await bot.send_message(user_id, msg_text)
+    if res["mj_api"] == "reserve":
+        await db.update_task_id(user_id, res["task_id"])
 
 
 @dp.message_handler(state="*", commands='start')
@@ -156,12 +173,17 @@ async def cancel(message: Message, state: FSMContext):
 
 @dp.callback_query_handler(Text(startswith="choose_image:"))
 async def choose_image(call: CallbackQuery):
+    await call.answer()
     buttonMessageId = call.data.split(":")[1]
     image_id = int(call.data.split(":")[2])
-    ai.get_choose_mdjrny(buttonMessageId, image_id, call.from_user.id)
+    mj_api = call.data.split(":")[3]
     await call.message.answer("Ожидайте, генерирую изображение..🕙",
                               reply_markup=await user_kb.get_menu(call.from_user.id))
-    await call.answer()
+    res = await ai.get_choose_mdjrny(buttonMessageId, image_id, call.from_user.id, mj_api)
+    if not res["status"]:
+        await call.message.answer("Произошла ошибка, повторите попытку позже")
+    elif mj_api == "reserve":
+        await call.message.answer_photo(res)
 
 
 @dp.callback_query_handler(Text(startswith="try_prompt"))
@@ -202,18 +224,13 @@ async def try_prompt(call: CallbackQuery, state: FSMContext):
 
 Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
                 return
-        await call.message.answer("Ожидайте, генерирую изображение..🕙",
-                                  reply_markup=await user_kb.get_menu(call.from_user.id))
-        await call.message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
-        res = await ai.get_mdjrny(data['prompt'], call.from_user.id)
-        if not res["status"]:
-            await call.message.answer("Произошла ошибка, повторите запрос позже")
+        await get_mj(data['prompt'], call.from_user.id, call.bot)
 
     await call.answer()
 
 
 @dp.message_handler()
-async def prompt(message: Message, state: FSMContext):
+async def gen_prompt(message: Message, state: FSMContext):
     await state.update_data(prompt=message.text)
     user = await db.get_user(message.from_user.id)
     if user["default_ai"] == "chatgpt":
@@ -246,12 +263,7 @@ async def prompt(message: Message, state: FSMContext):
 
 Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
                 return
-        await message.answer("Ожидайте, генерирую изображение..🕙",
-                             reply_markup=await user_kb.get_menu(message.from_user.id))
-        await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
-        res = await ai.get_mdjrny(message.text, message.from_user.id)
-        if not res["status"]:
-            await message.answer("Произошла ошибка, повторите запрос позже")
+        await get_mj(message.text, message.from_user.id, message.bot)
 
 
 @dp.message_handler(content_types="photo")
@@ -273,9 +285,5 @@ async def photo_imagine(message: Message):
 
 Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
             return
-    await message.answer("Ожидайте, генерирую изображение..🕙",
-                         reply_markup=await user_kb.get_menu(message.from_user.id))
-    await message.answer_chat_action(ChatActions.UPLOAD_PHOTO)
-    res = await ai.get_mdjrny(prompt, message.from_user.id)
-    if not res["status"]:
-        await message.answer("Произошла ошибка, повторите запрос позже")
+
+    await get_mj(prompt, message.from_user.id, message.bot)

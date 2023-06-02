@@ -30,9 +30,8 @@ async def get_midjourney(request: Request):
     img = BytesIO(response.content)
     user_id = int(data["ref"])
     user = db.get_user(user_id)
-
     await bot.send_photo(user["user_id"], photo=img,
-                         reply_markup=user_kb.get_try_prompt_or_choose(data["buttonMessageId"]))
+                         reply_markup=user_kb.get_try_prompt_or_choose(data["buttonMessageId"], "main"))
     if user["free_image"] > 0:
         await db.remove_image(user["user_id"])
     else:
@@ -46,6 +45,28 @@ async def get_midjourney(request: Request):
     user_id = int(data["ref"])
     photo_url = data["imageUrl"]
     await bot.send_photo(user_id, photo_url)
+
+
+@app.post('/api/midjourney_reserve')
+async def get_midjourney(user_id: int, request: Request):
+    data = await request.json()
+    if "imageURL" not in data:
+        return
+    elif "status" in data and data["status"] == "midjourney-blocked-by-ai-moderation":
+        await bot.send_message(user_id, "В запросе есть запрещённое слово. Попробуйте другой запрос")
+        return
+    photo_url = data["imageURL"]
+    response = requests.get(photo_url)
+    img = BytesIO(response.content)
+
+    user = await db.get_user(user_id)
+    await bot.send_photo(user_id, photo=img,
+                         reply_markup=user_kb.get_try_prompt_or_choose(user["task_id"], "reserve"))
+    if user["free_image"] > 0:
+        await db.remove_image(user_id)
+    else:
+        await db.remove_balance(user_id)
+    await db.add_action(user_id, "image")
 
 
 if __name__ == "__main__":

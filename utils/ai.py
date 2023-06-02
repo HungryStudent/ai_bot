@@ -10,8 +10,31 @@ from utils import db
 tnl = TNL(TNL_API_KEY)
 
 
-def reserve_mj():
-    pass
+async def send_error(text):
+    my_bot = Bot(TOKEN)
+    await my_bot.send_message(796644977, text)
+
+
+async def reserve_mj(prompt, user_id):
+    headers = {
+        'Authorization': MJ_API_KEY,
+        'Content-Type': 'application/json'
+    }
+    payload = {
+        "callbackURL": midjourney_webhook_url + "_reserve" + f"?user_id={user_id}",
+        "prompt": prompt
+    }
+    res = requests.post("https://api.midjourneyapi.io/v2/imagine", headers=headers, json=payload)
+    data = res.json()
+    return_data = {}
+    print(data)
+    if "errors" in data:
+        return_data["error"] = {}
+        if "Prompt contains banned word" in data["errors"][0]["msg"]:
+            return_data["error"]["type"] = "banned word error"
+    else:
+        return_data["task_id"] = data["taskId"]
+    return return_data
 
 
 async def get_translate(text):
@@ -50,8 +73,7 @@ async def get_gpt(prompt):
             try:
                 return response["choices"][0]["text"]
             except KeyError:
-                my_bot = Bot(TOKEN)
-                await my_bot.send_message(796644977, response["error"]["message"])
+                await send_error(response["error"]["message"])
                 print(f"Ошибка {response}")
                 if "That model is currently overloaded with other requests" in response["error"]["message"]:
                     return "Модель ChatGPT сейчас перегружена запросами, повторите запрос позже."
@@ -64,25 +86,26 @@ async def get_mdjrny(prompt, user_id):
         res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url, ref=user_id)
         status = res["success"]
         if not status:
-            my_bot = Bot(TOKEN)
-            await my_bot.send_message(796644977, res)
+            await send_error(res)
+            res = await reserve_mj(translated_prompt, user_id)
+            mj_api = "reserve"
+            status = True
+        else:
+            mj_api = "main"
     except requests.exceptions.JSONDecodeError:
-        headers = {
-            'Authorization': MJ_API_KEY,
-            'Content-Type': 'application/json'
-        }
-        payload = {
-            "callbackURL": midjourney_webhook_url + f"?user_id={user_id}",
-            "prompt": translated_prompt
-        }
-        res = requests.post("https://api.midjourneyapi.io/v2/imagine", headers=headers, json=payload)
-        data = res.json()
-        if "errors" in data:
-            if "Prompt contains banned word" in data["errors"][0]["msg"]:
-                return "banned word error"
-        return data["taskId"]
-        status = False
-    return {"status": status}
+        res = await reserve_mj(translated_prompt, user_id)
+        mj_api = "reserve"
+        status = True
+
+    error = None
+    task_id = None
+    if mj_api == "reserve":
+        if "error" in res:
+            error = res["error"]
+        else:
+            task_id = res["task_id"]
+
+    return {"status": status, "mj_api": mj_api, "error": error, "task_id": task_id}
     #
     # headers = {
     #     'Authorization': MJ_API_KEY,
@@ -100,14 +123,30 @@ async def get_mdjrny(prompt, user_id):
     # return data["taskId"]
 
 
-def get_choose_mdjrny(buttonMessageId, image_id, user_id):
-    try:
-        res = tnl.button(f"U{image_id}", buttonMessageId, ref=user_id,
-                         webhook_override=midjourney_webhook_url + "/choose")
-        status = res["success"]
-    except requests.exceptions.JSONDecodeError:
-        status = False
-    return {"status": status}
+async def get_choose_mdjrny(buttonMessageId, image_id, user_id, mj_api):
+    if mj_api == "main":
+        try:
+            res = tnl.button(f"U{image_id}", buttonMessageId, ref=user_id,
+                             webhook_override=midjourney_webhook_url + "/choose")
+            return {"status": True}
+        except requests.exceptions.JSONDecodeError:
+            return {"status": True}
+    elif mj_api == "reserve":
+        headers = {
+            'Authorization': MJ_API_KEY,
+            'Content-Type': 'application/json'
+        }
+        payload = {
+            "taskId": buttonMessageId,
+            "position": image_id
+        }
+        res = requests.post("https://api.midjourneyapi.io/v2/upscale", headers=headers, json=payload)
+        data = res.json()
+        if "errors" in data:
+            pass
+            return {"status": False, "error": {}}
+
+        return {"status": True, "image_url": data["imageURL"]}
     #
     # headers = {
     #     'Authorization': MJ_API_KEY,
