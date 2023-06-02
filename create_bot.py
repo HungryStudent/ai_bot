@@ -32,7 +32,7 @@ class IsAdminFilter(BoundFilter):
 
     async def check(self, obj: Union[types.Message, types.CallbackQuery]):
         user = obj.from_user
-        db_user = db.get_user(user.id)
+        db_user = await db.get_user(user.id)
         if user.id in ADMINS:
             return self.global_admin is True
         if db_user["role"] == "admin":

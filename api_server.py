@@ -29,7 +29,7 @@ async def get_midjourney(request: Request):
     response = requests.get(photo_url)
     img = BytesIO(response.content)
     user_id = int(data["ref"])
-    user = db.get_user(user_id)
+    user = await db.get_user(user_id)
     await bot.send_photo(user["user_id"], photo=img,
                          reply_markup=user_kb.get_try_prompt_or_choose(data["buttonMessageId"], "main"))
     if user["free_image"] > 0:
