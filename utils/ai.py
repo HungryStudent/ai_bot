@@ -2,6 +2,7 @@ import aiohttp
 import requests
 from aiogram import Bot
 from midjourney_api import TNL
+from googletranslatepy import Translator
 
 import change_token
 from config import OPENAPI_TOKEN, ya_folder, midjourney_webhook_url, MJ_API_KEY, TNL_API_KEY, TOKEN
@@ -27,7 +28,6 @@ async def reserve_mj(prompt, user_id):
     res = requests.post("https://api.midjourneyapi.io/v2/imagine", headers=headers, json=payload)
     data = res.json()
     return_data = {}
-    print(data)
     if "errors" in data:
         return_data["error"] = {}
         if "Prompt contains banned word" in data["errors"][0]["msg"]:
@@ -38,22 +38,9 @@ async def reserve_mj(prompt, user_id):
 
 
 async def get_translate(text):
-    iam_token = await db.get_iam_token()
-    async with aiohttp.ClientSession() as session:
-        async with session.post('https://translate.api.cloud.yandex.net/translate/v2/translate',
-                                headers={'Authorization': f'Bearer {iam_token}',
-                                         'Content-Type': 'application/json'},
-                                json={
-                                    "folderId": ya_folder,
-                                    "texts": [text],
-                                    "targetLanguageCode": "en"
-                                }) as resp:
-            response = await resp.json()
-            try:
-                return response['translations'][0]['text']
-            except KeyError:
-                await change_token.main()
-                return await get_translate(text)
+    translator = Translator(target="en")
+    translate = translator.translate(text)
+    return translate
 
 
 async def get_gpt(prompt):
@@ -81,7 +68,9 @@ async def get_gpt(prompt):
 
 
 async def get_mdjrny(prompt, user_id):
+    print("adddddd")
     translated_prompt = await get_translate(prompt)
+    print(translated_prompt)
     try:
         res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url, ref=user_id)
         status = res["success"]
