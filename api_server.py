@@ -52,8 +52,15 @@ async def get_midjourney(user_id: int, request: Request):
     data = await request.json()
     if "imageURL" not in data:
         return
-    elif "status" in data and data["status"] == "midjourney-blocked-by-ai-moderation":
-        await bot.send_message(user_id, "В запросе есть запрещённое слово. Попробуйте другой запрос")
+    elif "status" in data:
+        if data["status"] == "midjourney-blocked-by-ai-moderation":
+            await bot.send_message(user_id, "В запросе есть запрещённое слово. Попробуйте другой запрос")
+        elif data["status"] in ["waiting-to-start", "running"]:
+            pass
+        else:
+            pass
+        return
+    elif "imageURL" not in data:
         return
     photo_url = data["imageURL"]
     response = requests.get(photo_url)
