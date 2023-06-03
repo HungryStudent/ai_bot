@@ -52,6 +52,8 @@ async def admin_ref_menu(call: CallbackQuery):
 async def add_balance(message: Message):
     try:
         user_id, value = message.get_args().split(" ")
+        value = int(value)
+        user_id = int(user_id)
     except ValueError:
         await message.answer("Команда введена неверно. Используйте /balance {id пользователя} {баланс}")
         return

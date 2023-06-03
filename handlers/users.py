@@ -177,7 +177,7 @@ async def choose_image(call: CallbackQuery):
     buttonMessageId = call.data.split(":")[1]
     image_id = int(call.data.split(":")[2])
     mj_api = call.data.split(":")[3]
-    await call.message.answer("Ожидайте, генерирую изображение..🕙",
+    await call.message.answer("Ожидайте, сохраняю изображение в отличном качестве…⏳",
                               reply_markup=await user_kb.get_menu(call.from_user.id))
     res = await ai.get_choose_mdjrny(buttonMessageId, image_id, call.from_user.id, mj_api)
     if not res["status"]:
