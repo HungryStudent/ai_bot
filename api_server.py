@@ -57,6 +57,8 @@ async def get_midjourney(user_id: int, request: Request):
             await bot.send_message(user_id, "В запросе есть запрещённое слово. Попробуйте другой запрос")
         elif data["status"] in ["waiting-to-start", "running"]:
             pass
+        elif data["status"] == "midjourney-bad-request-other":
+            await bot.send_message(user_id, "Произошла ошибка, повторите запрос")
         else:
             pass
         return
