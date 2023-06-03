@@ -97,7 +97,7 @@ async def add_balance(user_id, amount):
     conn: Connection = await get_conn()
     ref_balance = int(float(amount) * 0.15)
     await conn.execute("UPDATE users SET balance = balance + $2 WHERE user_id = $1", user_id, amount)
-    await conn6.execute(
+    await conn.execute(
         "UPDATE users SET ref_balance = ref_balance + $2 WHERE user_id = (SELECT inviter_id FROM users WHERE user_id = $1)",
         user_id, ref_balance)
 
