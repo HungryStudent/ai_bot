@@ -68,9 +68,7 @@ async def get_gpt(prompt):
 
 
 async def get_mdjrny(prompt, user_id):
-    print("adddddd")
     translated_prompt = await get_translate(prompt)
-    print(translated_prompt)
     try:
         res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url, ref=user_id)
         status = res["success"]

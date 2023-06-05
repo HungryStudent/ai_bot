@@ -16,7 +16,7 @@ async def get_mj(prompt, user_id, bot: Bot):
     await bot.send_chat_action(user_id, ChatActions.UPLOAD_PHOTO)
 
     res = await ai.get_mdjrny(prompt, user_id)
-    print(res)
+
     if not res["status"]:
         msg_text = "Произошла ошибка, повторите попытку позже"
         if res["error"] == "banned word error":
@@ -189,6 +189,7 @@ async def choose_image(call: CallbackQuery):
 @dp.callback_query_handler(Text(startswith="try_prompt"))
 async def try_prompt(call: CallbackQuery, state: FSMContext):
     data = await state.get_data()
+    await call.answer()
     ai_type = call.data.split(":")[1]
 
     user = await db.get_user(call.from_user.id)
@@ -226,7 +227,7 @@ async def try_prompt(call: CallbackQuery, state: FSMContext):
                 return
         await get_mj(data['prompt'], call.from_user.id, call.bot)
 
-    await call.answer()
+
 
 
 @dp.message_handler()

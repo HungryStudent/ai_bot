@@ -123,7 +123,7 @@ async def get_ref_stat(user_id):
                               "(SELECT COUNT(id) FROM orders JOIN users u ON orders.user_id = u.user_id WHERE u.inviter_id = $1) as orders_count",
                               user_id)
     await conn.close()
-    print(row)
+    ,(row)
     return row
 
 

@@ -36,12 +36,14 @@ async def admin_ref_menu(call: CallbackQuery):
     for inviter_id in inviters_id:
         inviter = await db.get_ref_stat(inviter_id['inviter_id'])
         if inviter['all_income'] is None:
-            inviter['all_income'] = 0
+            all_income = 0
+        else:
+            all_income = inviter['all_income']
 
         inviters.append(
             {'user_id': inviter_id['inviter_id'], 'refs_count': inviter['count_refs'],
              'orders_count': inviter['orders_count'],
-             'all_income': inviter['all_income'], 'available_for_withdrawal': inviter['available_for_withdrawal']})
+             'all_income': all_income, 'available_for_withdrawal': inviter['available_for_withdrawal']})
     sort_inviters = sorted(inviters, key=lambda d: d['all_income'], reverse=True)
     await call.message.answer(
         f'<b>Партнерская статистика</b>\n\n<pre>{tabulate(sort_inviters, tablefmt="jira", numalign="left")}</pre>')
