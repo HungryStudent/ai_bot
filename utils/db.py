@@ -102,7 +102,7 @@ async def add_balance(user_id, amount):
         user_id, ref_balance)
 
     await conn.execute("INSERT INTO orders(user_id, amount, pay_time) VALUES ($1, $2, $3)",
-                       (user_id, amount, int(datetime.now().timestamp())))
+                       user_id, amount, int(datetime.now().timestamp()))
     await conn.close()
 
 
