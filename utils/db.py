@@ -89,7 +89,7 @@ async def remove_balance(user_id):
 
 async def add_balance_from_admin(user_id, amount):
     conn: Connection = await get_conn()
-    await conn.execute("UPDATE users SET balance = $2 WHERE user_id = $1", user_id, amount)
+    await conn.execute("UPDATE users SET balance = balance + $2 WHERE user_id = $1", user_id, amount)
     await conn.close()
 
 
