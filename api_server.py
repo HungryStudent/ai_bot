@@ -26,6 +26,8 @@ async def check_pay_freekassa(MERCHANT_ORDER_ID, AMOUNT):
 async def get_midjourney(request: Request):
     data = await request.json()
     photo_url = data["imageUrl"]
+    if photo_url == '':
+        await bot.send_message(796644977, data)
     response = requests.get(photo_url)
     img = BytesIO(response.content)
     user_id = int(data["ref"])
