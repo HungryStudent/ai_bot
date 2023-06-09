@@ -35,20 +35,20 @@ def get_try_prompt(ai_type):
 async def get_menu(user_id):
     user = await db.get_user(user_id)
     if user["default_ai"] == "chatgpt":
-        return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬Текст✅"),
-                                                                          KeyboardButton("🎨Изображение"),
+        return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬ChatGPT✅"),
+                                                                          KeyboardButton("🎨Midjourney"),
                                                                           KeyboardButton("⚙Аккаунт"),
                                                                           KeyboardButton("👨🏻‍💻Поддержка"),
                                                                           KeyboardButton("🤝Партнерская программа"))
     elif user["default_ai"] == "image":
-        return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬Текст"),
-                                                                          KeyboardButton("🎨Изображение✅"),
+        return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬ChatGPT"),
+                                                                          KeyboardButton("🎨Midjourney✅"),
                                                                           KeyboardButton("⚙Аккаунт"),
                                                                           KeyboardButton("👨🏻‍💻Поддержка"),
                                                                           KeyboardButton("🤝Партнерская программа"))
     else:
-        return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬Текст"),
-                                                                          KeyboardButton("🎨Изображение"),
+        return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬ChatGPT"),
+                                                                          KeyboardButton("🎨Midjourney"),
                                                                           KeyboardButton("⚙Аккаунт"),
                                                                           KeyboardButton("👨🏻‍💻Поддержка"),
                                                                           KeyboardButton("🤝Партнерская программа"))

@@ -111,8 +111,8 @@ async def enter_other_amount(call: CallbackQuery):
     await states.EnterAmount.enter_amount.set()
 
 
-@dp.message_handler(state="*", text="💬Текст✅")
-@dp.message_handler(state="*", text="💬Текст")
+@dp.message_handler(state="*", text="💬ChatGPT✅")
+@dp.message_handler(state="*", text="💬ChatGPT")
 async def ask_question(message: Message, state: FSMContext):
     await state.finish()
     await db.change_default_ai(message.from_user.id, "chatgpt")
@@ -134,8 +134,8 @@ async def support(message: Message, state: FSMContext):
                          disable_web_page_preview=True, reply_markup=user_kb.about)
 
 
-@dp.message_handler(state="*", text="🎨Изображение✅")
-@dp.message_handler(state="*", text="🎨Изображение")
+@dp.message_handler(state="*", text="🎨Midjourney✅")
+@dp.message_handler(state="*", text="🎨Midjourney")
 async def gen_img(message: Message, state: FSMContext):
     await state.finish()
     await db.change_default_ai(message.from_user.id, "image")
