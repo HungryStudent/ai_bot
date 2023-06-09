@@ -228,12 +228,14 @@ async def try_prompt(call: CallbackQuery, state: FSMContext):
         await get_mj(data['prompt'], call.from_user.id, call.bot)
 
 
-
-
 @dp.message_handler()
 async def gen_prompt(message: Message, state: FSMContext):
     await state.update_data(prompt=message.text)
     user = await db.get_user(message.from_user.id)
+    if user is None:
+        await message.answer("Введите команду /start для перезагрузки бота")
+        await message.bot.send_message(796644977, message.from_user.id)
+        return
     if user["default_ai"] == "chatgpt":
         if user["balance"] < 10:
             if user["free_chatgpt"] == 0:
