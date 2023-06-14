@@ -83,14 +83,24 @@ async def show_profile(message: Message, state: FSMContext):
     await state.finish()
     user = await db.get_user(message.from_user.id)
     await message.answer(f"""🆔: <code>{message.from_user.id}</code>
-💰Баланс: {user['balance']} руб.""", reply_markup=user_kb.top_up_balance)
+💰Баланс: {user['balance']} руб.""", reply_markup=user_kb.get_account(user["chat_gpt_lang"]))
 
 
 @dp.callback_query_handler(text="back_to_profile")
 async def back_to_profile(call: CallbackQuery):
     user = await db.get_user(call.from_user.id)
     await call.message.edit_text(f"""id: {call.from_user.id}
-Баланс: {user['balance']} руб.""", reply_markup=user_kb.top_up_balance)
+Баланс: {user['balance']} руб.""", reply_markup=user_kb.get_account(user["chat_gpt_lang"]))
+
+
+@dp.callback_query_handler(Text(startswith="change_lang:"))
+async def change_lang(call: CallbackQuery):
+    curr_lang = call.data.split(":")[1]
+    new_lang = "en" if curr_lang == "ru" else "ru"
+    await db.change_chat_gpt_lang(call.from_user.id, new_lang)
+    lang_text = {"ru": "русский", "en": "английский"}
+    await call.answer(f"Язык изменён на {lang_text[new_lang]}")
+    await call.message.edit_reply_markup(reply_markup=user_kb.get_account(new_lang))
 
 
 @dp.callback_query_handler(text="top_up_balance")
@@ -207,7 +217,7 @@ async def try_prompt(call: CallbackQuery, state: FSMContext):
         await call.message.answer("Ожидайте, генерирую ответ..🕙",
                                   reply_markup=await user_kb.get_menu(call.from_user.id))
         await call.message.answer_chat_action(ChatActions.TYPING)
-        result = await ai.get_gpt(data['prompt'])
+        result = await ai.get_gpt(data['prompt'], user["chat_gpt_lang"])
         await call.message.answer(result, reply_markup=user_kb.get_try_prompt('chatgpt'))
         user = await db.get_user(call.from_user.id)
         if user["free_chatgpt"] > 0:
@@ -248,7 +258,7 @@ async def gen_prompt(message: Message, state: FSMContext):
                 return
         await message.answer("Ожидайте, генерирую ответ..🕙", reply_markup=await user_kb.get_menu(message.from_user.id))
         await message.answer_chat_action(ChatActions.TYPING)
-        result = await ai.get_gpt(message.text)
+        result = await ai.get_gpt(message.text, user["chat_gpt_lang"])
         await message.answer(result, reply_markup=user_kb.get_try_prompt('chatgpt'))
         user = await db.get_user(message.from_user.id)
         if user["free_chatgpt"] > 0:

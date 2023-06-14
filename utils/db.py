@@ -21,7 +21,8 @@ async def start():
                        "default_ai VARCHAR(10) DEFAULT 'empty',"
                        "inviter_id BIGINT,"
                        "ref_balance INT DEFAULT 0,"
-                       "task_id VARCHAR(1024) DEFAULT '0')")
+                       "task_id VARCHAR(1024) DEFAULT '0',"
+                       "chat_gpt_lang VARCHAR(2) DEFAULT 'ru')")
     await conn.execute("CREATE TABLE IF NOT EXISTS orders(id SERIAL PRIMARY KEY, user_id BIGINT, amount INT,"
                        "pay_time INT)")
     await conn.execute(
@@ -110,6 +111,13 @@ async def add_balance_from_ref(user_id):
     conn: Connection = await get_conn()
     await conn.execute("UPDATE users SET balance = balance + ref_balance, ref_balance = 0 WHERE user_id = $1",
                        user_id)
+    await conn.close()
+
+
+async def change_chat_gpt_lang(user_id, new_lang):
+    conn: Connection = await get_conn()
+    await conn.execute("UPDATE users SET chat_gpt_lang = $2 WHERE user_id = $1",
+                       user_id, new_lang)
     await conn.close()
 
 

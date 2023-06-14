@@ -43,7 +43,9 @@ async def get_translate(text):
     return translate
 
 
-async def get_gpt(prompt):
+async def get_gpt(prompt, lang):
+    lang_text = {"en": "compose an answer in English", "ru": "составь ответ на русском языке"}
+    prompt += f"\n{lang_text[lang]}"
     async with aiohttp.ClientSession() as session:
         async with session.post('https://api.openai.com/v1/completions',
                                 headers={'Authorization': f'Bearer {OPENAPI_TOKEN}',

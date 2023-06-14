@@ -27,6 +27,13 @@ back_to_choose = InlineKeyboardMarkup(row_width=1).add(
     InlineKeyboardButton("🔙Назад", callback_data="back_to_choose_balance"))
 
 
+def get_account(lang):
+    lang_text = {"en": "ENG", "ru": "RUS"}
+    return InlineKeyboardMarkup(row_width=1).add(
+        InlineKeyboardButton("💰Пополнить баланс", callback_data="top_up_balance"),
+        InlineKeyboardButton(f"Ответы ChatGPT: {lang_text[lang]}", callback_data=f"change_lang:{lang}"))
+
+
 def get_try_prompt(ai_type):
     return InlineKeyboardMarkup(row_width=1).add(
         InlineKeyboardButton("🔄 Другой вариант", callback_data=f"try_prompt:{ai_type}"))
