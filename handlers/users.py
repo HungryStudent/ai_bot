@@ -298,7 +298,7 @@ async def gen_prompt(message: Message, state: FSMContext):
 
 
 @dp.message_handler(content_types="photo")
-async def photo_imagine(message: Message):
+async def photo_imagine(message: Message, state: FSMContext):
     if message.caption is None:
         await message.answer("Добавьте описание к фотографии")
         return
@@ -306,6 +306,7 @@ async def photo_imagine(message: Message):
     photo_url = f"https://api.telegram.org/file/bot{TOKEN}/{file.file_path}"
     ds_photo_url = await more_api.upload_photo_to_host(photo_url)
     prompt = ds_photo_url + " " + message.caption
+    await state.update_data(prompt=prompt)
     user = await db.get_user(message.from_user.id)
     if user["balance"] < 10:
         if user["free_image"] == 0:
