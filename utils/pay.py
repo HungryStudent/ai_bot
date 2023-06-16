@@ -4,11 +4,8 @@ import json
 import random
 
 import requests
-from LavaAPI import LavaAPI
 
 from config import FreeKassa, LAVA_API_KEY, LAVA_SHOP_ID
-
-lava = LavaAPI(LAVA_API_KEY)
 
 
 def get_pay_url_freekassa(user_id, amount):

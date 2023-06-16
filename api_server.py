@@ -42,12 +42,9 @@ async def check_pay_freekassa(MERCHANT_ORDER_ID, AMOUNT):
     return 'YES'
 
 
-@app.get('/api/pay/lava')
-async def check_pay_freekassa(data: LavaWebhook, Authorization: Header()):
-    print(Authorization)
-    if Authorization != LAVA_WEBHOOK_KEY:
-        raise HTTPException(401)
-    elif data.status == "success":
+@app.post('/api/pay/lava')
+async def check_pay_freekassa(data: LavaWebhook):
+    if data.status != "success":
         raise HTTPException(200)
     user_id = int(data.order_id.split(":")[0])
     await add_balance(user_id, int(data.amount))
