@@ -2,7 +2,7 @@ from datetime import datetime
 
 import requests
 from aiogram import Bot
-from aiogram.types import Message, CallbackQuery, ChatActions, Update
+from aiogram.types import Message, CallbackQuery, ChatActions
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 
@@ -22,7 +22,18 @@ async def remove_balance(bot: Bot, user_id):
 
 Успей пополнить в течении 24 часов и получи на счёт +10% от суммы пополнения ⤵️""",
                                reply_markup=user_kb.get_pay(user_id, 10))
+
+
+async def not_enough_balance(bot: Bot, user_id):
+    user = await db.get_user(user_id)
+    if not user["is_pay"]:
         requests.post(NOTIFY_URL + f"/stock/{user_id}")
+    await bot.send_message(user_id, """<i>Упс.. 
+Недостаточно средств
+
+1 запрос - 10 рублей</i>
+
+Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
 
 
 async def get_mj(prompt, user_id, bot: Bot):
@@ -228,19 +239,13 @@ async def choose_image(call: CallbackQuery):
 async def try_prompt(call: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     await call.answer()
-    ai_type = call.data.split(":")[1]
 
     user = await db.get_user(call.from_user.id)
 
     if user["default_ai"] == "chatgpt":
         if user["balance"] < 10:
             if user["free_chatgpt"] == 0:
-                await call.message.answer("""<i>Упс.. 
-Недостаточно средств
-
-1 запрос - 10 рублей</i>
-
-Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
+                await not_enough_balance(call.bot, call.from_user.id)
                 return
         await call.message.answer("Ожидайте, генерирую ответ..🕙",
                                   reply_markup=await user_kb.get_menu(call.from_user.id))
@@ -256,12 +261,7 @@ async def try_prompt(call: CallbackQuery, state: FSMContext):
     elif user["default_ai"] == "image":
         if user["balance"] < 10:
             if user["free_image"] == 0:
-                await call.message.answer("""<i>Упс.. 
-Недостаточно средств
-
-1 запрос - 10 рублей</i>
-
-Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
+                await not_enough_balance(call.bot, call.from_user.id)
                 return
         await get_mj(data['prompt'], call.from_user.id, call.bot)
 
@@ -277,12 +277,7 @@ async def gen_prompt(message: Message, state: FSMContext):
     if user["default_ai"] == "chatgpt":
         if user["balance"] < 10:
             if user["free_chatgpt"] == 0:
-                await message.answer("""<i>Упс.. 
-Недостаточно средств
-
-1 запрос - 10 рублей</i>
-
-Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
+                await not_enough_balance(message.bot, message.from_user.id)
                 return
         await message.answer("Ожидайте, генерирую ответ..🕙", reply_markup=await user_kb.get_menu(message.from_user.id))
         await message.answer_chat_action(ChatActions.TYPING)
@@ -297,12 +292,7 @@ async def gen_prompt(message: Message, state: FSMContext):
     elif user["default_ai"] == "image":
         if user["balance"] < 10:
             if user["free_image"] == 0:
-                await message.answer("""<i>Упс.. 
-Недостаточно средств
-
-1 запрос - 10 рублей</i>
-
-Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
+                await not_enough_balance(message.bot, message.from_user.id)
                 return
         await get_mj(message.text, message.from_user.id, message.bot)
 
@@ -319,12 +309,7 @@ async def photo_imagine(message: Message):
     user = await db.get_user(message.from_user.id)
     if user["balance"] < 10:
         if user["free_image"] == 0:
-            await message.answer("""<i>Упс.. 
-Недостаточно средств
-
-1 запрос - 10 рублей</i>
-
-Для продолжения необходимо пополнить баланс ⤵""", reply_markup=user_kb.top_up_balance)
+            await not_enough_balance(message.bot, message.from_user.id)
             return
 
     await get_mj(prompt, message.from_user.id, message.bot)

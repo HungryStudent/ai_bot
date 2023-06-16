@@ -23,7 +23,7 @@ async def stock_notify(user_id):
     await bot.send_message(user_id,
                            "Успей пополнить баланс в течении 24 часов и получи на счёт +30% от суммы пополнения⤵️",
                            reply_markup=user_kb.get_pay(user_id, 30))
-    await db.update_stock_percent(user_id, 30)
+    await db.update_new_stock_time(user_id, int(datetime.now().timestamp()))
 
 
 @app.on_event('startup')
@@ -33,7 +33,7 @@ def init_scheduler():
 
 @app.post('/stock/{user_id}')
 async def create_notify_request(user_id: int):
-    run_date = datetime.now() + timedelta(minutes=10)
+    run_date = datetime.now() + timedelta(seconds=2)
     try:
         scheduler.add_job(stock_notify, "date", run_date=run_date, args=[user_id], id=str(user_id))
     except ConflictingIdError:

@@ -24,7 +24,8 @@ async def start():
                        "task_id VARCHAR(1024) DEFAULT '0',"
                        "chat_gpt_lang VARCHAR(2) DEFAULT 'ru',"
                        "stock_time INT DEFAULT 0,"
-                       "stock_percent SMALLINT DEFAULT 10)")
+                       "new_stock_time INT DEFAULT 0,"
+                       "is_pay BOOLEAN DEFAULT FALSE)")
     await conn.execute("CREATE TABLE IF NOT EXISTS orders(id SERIAL PRIMARY KEY, user_id BIGINT, amount INT, stock INT,"
                        "pay_time INT)")
     await conn.execute(
@@ -64,7 +65,10 @@ async def update_task_id(user_id, task_id):
     conn: Connection = await get_conn()
     await conn.execute("UPDATE users SET task_id = $2 WHERE user_id = $1", user_id, task_id)
     await conn.close()
-
+async def update_is_pay(user_id, is_pay):
+    conn: Connection = await get_conn()
+    await conn.execute("UPDATE users SET is_pay = $2 WHERE user_id = $1", user_id, is_pay)
+    await conn.close()
 
 async def change_default_ai(user_id, ai_type):
     conn: Connection = await get_conn()
@@ -89,12 +93,10 @@ async def update_stock_time(user_id, stock_time):
     await conn.execute("UPDATE users SET stock_time = $2 WHERE user_id = $1", user_id, stock_time)
     await conn.close()
 
-
-async def update_stock_percent(user_id, stock_percent):
+async def update_new_stock_time(user_id, new_stock_time):
     conn: Connection = await get_conn()
-    await conn.execute("UPDATE users SET stock_percent = $2 WHERE user_id = $1", user_id, stock_percent)
+    await conn.execute("UPDATE users SET new_stock_time = $2 WHERE user_id = $1", user_id, new_stock_time)
     await conn.close()
-
 
 async def remove_balance(user_id):
     conn: Connection = await get_conn()

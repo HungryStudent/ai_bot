@@ -2,7 +2,7 @@ from datetime import datetime
 
 from aiogram.utils.exceptions import ChatNotFound
 
-from config import LAVA_WEBHOOK_KEY
+from config import LAVA_WEBHOOK_KEY, NOTIFY_URL
 from handlers.users import remove_balance
 from keyboards import user as user_kb
 from fastapi import FastAPI, Request, Header, HTTPException
@@ -25,10 +25,14 @@ class LavaWebhook(BaseModel):
 async def add_balance(user_id, amount):
     user = await db.get_user(user_id)
     stock = 0
-    if int(datetime.now().timestamp()) - user["stock_time"] < 86400:
-        stock = int(amount * user["stock_percent"] * 0.01)
+    if not user["is_pay"] and int(datetime.now().timestamp()) - user["new_stock_time"] < 86400:
+        stock = int(amount * 0.3)
+        await db.update_new_stock_time(user_id, 0)
+    elif int(datetime.now().timestamp()) - user["stock_time"] < 86400:
+        stock = int(amount * 0.1)
         await db.update_stock_time(user_id, 0)
-        await db.update_stock_percent(user_id, 10)
+    requests.delete(NOTIFY_URL + f"/stock/{user_id}")
+    await db.update_is_pay(user_id, True)
     await db.add_balance(user_id, amount + stock)
     await db.add_order(user_id, amount, stock)
     await bot.send_message(user_id, f"💰 Успешное пополнение ({amount + stock} руб.)")
