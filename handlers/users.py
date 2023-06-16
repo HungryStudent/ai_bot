@@ -1,3 +1,6 @@
+from datetime import datetime
+
+import requests
 from aiogram import Bot
 from aiogram.types import Message, CallbackQuery, ChatActions, Update
 from aiogram.dispatcher.filters import Text
@@ -6,7 +9,7 @@ from aiogram.dispatcher import FSMContext
 from utils import db, ai, more_api, pay
 from states import user as states
 import keyboards.user as user_kb
-from config import bot_url, TOKEN
+from config import bot_url, TOKEN, NOTIFY_URL
 from create_bot import dp
 
 
@@ -14,11 +17,12 @@ async def remove_balance(bot: Bot, user_id):
     await db.remove_balance(user_id)
     user = await db.get_user(user_id)
     if user["balance"] <= 50:
-        await db.update_stock_time(user_id)
+        await db.update_stock_time(user_id, int(datetime.now().timestamp()))
         await bot.send_message(user_id, """⚠️Заканчивается баланс!
 
 Успей пополнить в течении 24 часов и получи на счёт +10% от суммы пополнения ⤵️""",
-                               reply_markup=user_kb.get_stock_pay(user_id))
+                               reply_markup=user_kb.get_pay(user_id, 10))
+        requests.post(NOTIFY_URL + f"/stock/{user_id}")
 
 
 async def get_mj(prompt, user_id, bot: Bot):

@@ -1,0 +1,61 @@
+from datetime import datetime
+
+from aiogram.utils.exceptions import ChatNotFound
+
+from config import LAVA_WEBHOOK_KEY
+from handlers.users import remove_balance
+from keyboards import user as user_kb
+from fastapi import FastAPI, Request, Header, HTTPException
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
+from datetime import datetime, timedelta
+
+from pydantic import BaseModel
+from create_bot import bot
+from io import BytesIO
+from utils import db
+import requests
+import uvicorn
+
+app = FastAPI()
+scheduler = AsyncIOScheduler()
+
+
+class LavaWebhook(BaseModel):
+    order_id: str
+    status: str
+    amount: float
+
+
+async def stock_notify(user_id):
+    await bot.send_message(user_id,
+                           "Успей пополнить баланс в течении 24 часов и получи на счёт +30% от суммы пополнения⤵️",
+                           reply_markup=user_kb.get_pay(user_id, 30))
+    await db.update_stock_percent(user_id, 30)
+
+
+@app.on_event('startup')
+def init_scheduler():
+    scheduler.start()
+
+
+@app.post('/stock/{user_id}')
+async def create_notify_request(user_id: int):
+    run_date = datetime.now() + timedelta(seconds=2)
+    try:
+        scheduler.add_job(stock_notify, "date", run_date=run_date, args=[user_id], id=str(user_id))
+    except ConflictingIdError:
+        scheduler.remove_job(str(user_id))
+        scheduler.add_job(stock_notify, "date", run_date=run_date, args=[user_id], id=str(user_id))
+
+
+@app.delete('/stock/{user_id}')
+async def delete_notify_request(user_id: int):
+    try:
+        scheduler.remove_job(str(user_id))
+    except JobLookupError:
+        return
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8001, log_level="info")

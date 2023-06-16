@@ -24,11 +24,14 @@ class LavaWebhook(BaseModel):
 
 async def add_balance(user_id, amount):
     user = await db.get_user(user_id)
+    stock = 0
     if int(datetime.now().timestamp()) - user["stock_time"] < 86400:
-        amount = int(amount * 1.1)
-    await db.add_balance(user_id, amount)
-    await db.add_order(user_id, amount)
-    await bot.send_message(user_id, f"💰 Успешное пополнение ({amount} руб.)")
+        stock = int(amount * user["stock_percent"] * 0.01)
+        await db.update_stock_time(user_id, 0)
+        await db.update_stock_percent(user_id, 10)
+    await db.add_balance(user_id, amount + stock)
+    await db.add_order(user_id, amount, stock)
+    await bot.send_message(user_id, f"💰 Успешное пополнение ({amount + stock} руб.)")
 
 
 @app.get('/api/pay/freekassa')

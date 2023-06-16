@@ -23,8 +23,9 @@ async def start():
                        "ref_balance INT DEFAULT 0,"
                        "task_id VARCHAR(1024) DEFAULT '0',"
                        "chat_gpt_lang VARCHAR(2) DEFAULT 'ru',"
-                       "stock_time INT DEFAULT 0)")
-    await conn.execute("CREATE TABLE IF NOT EXISTS orders(id SERIAL PRIMARY KEY, user_id BIGINT, amount INT,"
+                       "stock_time INT DEFAULT 0,"
+                       "stock_percent SMALLINT DEFAULT 10)")
+    await conn.execute("CREATE TABLE IF NOT EXISTS orders(id SERIAL PRIMARY KEY, user_id BIGINT, amount INT, stock INT,"
                        "pay_time INT)")
     await conn.execute(
         "CREATE TABLE IF NOT EXISTS usage(id SERIAL PRIMARY KEY, user_id BIGINT, ai_type VARCHAR(10), use_time INT)")
@@ -83,9 +84,15 @@ async def remove_image(user_id):
     await conn.close()
 
 
-async def update_stock_time(user_id):
+async def update_stock_time(user_id, stock_time):
     conn: Connection = await get_conn()
-    await conn.execute("UPDATE users SET stock_time = $2 WHERE user_id = $1", user_id, int(datetime.now().timestamp()))
+    await conn.execute("UPDATE users SET stock_time = $2 WHERE user_id = $1", user_id, stock_time)
+    await conn.close()
+
+
+async def update_stock_percent(user_id, stock_percent):
+    conn: Connection = await get_conn()
+    await conn.execute("UPDATE users SET stock_percent = $2 WHERE user_id = $1", user_id, stock_percent)
     await conn.close()
 
 
@@ -111,10 +118,10 @@ async def add_balance(user_id, amount):
     await conn.close()
 
 
-async def add_order(user_id, amount):
+async def add_order(user_id, amount, stock):
     conn: Connection = await get_conn()
-    await conn.execute("INSERT INTO orders(user_id, amount, pay_time) VALUES ($1, $2, $3)",
-                       user_id, amount, int(datetime.now().timestamp()))
+    await conn.execute("INSERT INTO orders(user_id, amount, stock, pay_time) VALUES ($1, $2, $3, $4)",
+                       user_id, amount, stock, int(datetime.now().timestamp()))
     await conn.close()
 
 

@@ -60,22 +60,18 @@ async def get_menu(user_id):
                                                                           KeyboardButton("🤝Партнерская программа"))
 
 
-def get_pay(user_id):
+def get_pay(user_id, stock=0):
+    if stock == 0:
+        stock_text = ""
+    else:
+        stock_text = f" (+{stock}%)"
     return InlineKeyboardMarkup(row_width=3).add(
-        InlineKeyboardButton("200₽", callback_data="select_amount:200"),
-        InlineKeyboardButton("500₽", callback_data="select_amount:500"),
-        InlineKeyboardButton("1000₽", callback_data="select_amount:500")).add(
-        InlineKeyboardButton("💰Другая сумма", callback_data="other_amount")).add(
+        InlineKeyboardButton("200₽" + stock_text, callback_data="select_amount:200"),
+        InlineKeyboardButton("500₽" + stock_text, callback_data="select_amount:500"),
+        InlineKeyboardButton("1000₽" + stock_text, callback_data="select_amount:500")).add(
+        InlineKeyboardButton("💰Другая сумма" + stock_text, callback_data="other_amount")).add(
         InlineKeyboardButton("🔙Назад", callback_data="back_to_profile")
     )
-
-
-def get_stock_pay(user_id):
-    return InlineKeyboardMarkup(row_width=3).add(
-        InlineKeyboardButton("200₽ (+10%)", callback_data="select_amount:200"),
-        InlineKeyboardButton("500₽ (+10%)", callback_data="select_amount:500"),
-        InlineKeyboardButton("1000₽ (+10%)", callback_data="select_amount:1000")).add(
-        InlineKeyboardButton("💰Другая сумма (+10%)", callback_data="other_amount"))
 
 
 def get_pay_urls(urls):
