@@ -22,7 +22,8 @@ async def start():
                        "inviter_id BIGINT,"
                        "ref_balance INT DEFAULT 0,"
                        "task_id VARCHAR(1024) DEFAULT '0',"
-                       "chat_gpt_lang VARCHAR(2) DEFAULT 'ru')")
+                       "chat_gpt_lang VARCHAR(2) DEFAULT 'ru',"
+                       "stock_time INT DEFAULT 0)")
     await conn.execute("CREATE TABLE IF NOT EXISTS orders(id SERIAL PRIMARY KEY, user_id BIGINT, amount INT,"
                        "pay_time INT)")
     await conn.execute(
@@ -82,6 +83,12 @@ async def remove_image(user_id):
     await conn.close()
 
 
+async def update_stock_time(user_id):
+    conn: Connection = await get_conn()
+    await conn.execute("UPDATE users SET stock_time = $2 WHERE user_id = $1", user_id, int(datetime.now().timestamp()))
+    await conn.close()
+
+
 async def remove_balance(user_id):
     conn: Connection = await get_conn()
     await conn.execute("UPDATE users SET balance = balance - 10 WHERE user_id = $1", user_id)
@@ -101,7 +108,11 @@ async def add_balance(user_id, amount):
     await conn.execute(
         "UPDATE users SET ref_balance = ref_balance + $2 WHERE user_id = (SELECT inviter_id FROM users WHERE user_id = $1)",
         user_id, ref_balance)
+    await conn.close()
 
+
+async def add_order(user_id, amount):
+    conn: Connection = await get_conn()
     await conn.execute("INSERT INTO orders(user_id, amount, pay_time) VALUES ($1, $2, $3)",
                        user_id, amount, int(datetime.now().timestamp()))
     await conn.close()

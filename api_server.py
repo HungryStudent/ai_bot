@@ -1,6 +1,12 @@
+from datetime import datetime
+
 from aiogram.utils.exceptions import ChatNotFound
+
+from config import LAVA_WEBHOOK_KEY
+from handlers.users import remove_balance
 from keyboards import user as user_kb
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Header, HTTPException
+from pydantic import BaseModel
 from create_bot import bot
 from io import BytesIO
 from utils import db
@@ -10,9 +16,23 @@ import uvicorn
 app = FastAPI()
 
 
+class LavaWebhook(BaseModel):
+    order_id: str
+    status: str
+    amount: float
+
+
+async def add_balance(user_id, amount):
+    user = await db.get_user(user_id)
+    if int(datetime.now().timestamp()) - user["stock_time"] < 86400:
+        amount = int(amount * 1.1)
+    await db.add_balance(user_id, amount)
+    await db.add_order(user_id, amount)
+
+
 @app.get('/api/pay/freekassa')
 async def check_pay_freekassa(MERCHANT_ORDER_ID, AMOUNT):
-    await db.add_balance(int(MERCHANT_ORDER_ID), int(AMOUNT))
+    await add_balance(int(MERCHANT_ORDER_ID), int(AMOUNT))
     try:
         await bot.send_message(int(MERCHANT_ORDER_ID), "💰Баланс успешно пополнен!")
     except ChatNotFound:
@@ -20,6 +40,25 @@ async def check_pay_freekassa(MERCHANT_ORDER_ID, AMOUNT):
     except Exception as e:
         await bot.send_message(796644977, e)
     return 'YES'
+
+
+@app.get('/api/pay/lava')
+async def check_pay_freekassa(data: LavaWebhook, Authorization: Header()):
+    print(Authorization)
+    if Authorization != LAVA_WEBHOOK_KEY:
+        raise HTTPException(401)
+    elif data.status == "success":
+        raise HTTPException(200)
+    user_id = int(data.order_id.split(":")[0])
+    await add_balance(user_id, int(data.amount))
+    try:
+        await bot.send_message(user_id, "💰Баланс успешно пополнен!")
+    except ChatNotFound:
+        pass
+    except Exception as e:
+        await bot.send_message(796644977, e)
+
+    raise HTTPException(200)
 
 
 @app.post('/api/midjourney')
@@ -37,7 +76,7 @@ async def get_midjourney(request: Request):
     if user["free_image"] > 0:
         await db.remove_image(user["user_id"])
     else:
-        await db.remove_balance(user["user_id"])
+        await remove_balance(bot, user["user_id"])
     await db.add_action(user["user_id"], "image")
 
 
@@ -76,7 +115,7 @@ async def get_midjourney(user_id: int, request: Request):
     if user["free_image"] > 0:
         await db.remove_image(user_id)
     else:
-        await db.remove_balance(user_id)
+        await remove_balance(bot, user_id)
     await db.add_action(user_id, "image")
 
 

@@ -2,7 +2,6 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
     ReplyKeyboardRemove, WebAppInfo
 
 from utils import db
-from utils.pay import get_pay_url
 from urllib import parse
 
 withdraw_ref_menu = InlineKeyboardMarkup(row_width=2).add(
@@ -63,17 +62,27 @@ async def get_menu(user_id):
 
 def get_pay(user_id):
     return InlineKeyboardMarkup(row_width=3).add(
-        InlineKeyboardButton("200₽", web_app=WebAppInfo(url=get_pay_url(user_id, 200))),
-        InlineKeyboardButton("500₽", web_app=WebAppInfo(url=get_pay_url(user_id, 500))),
-        InlineKeyboardButton("1000₽", web_app=WebAppInfo(url=get_pay_url(user_id, 1000)))).add(
+        InlineKeyboardButton("200₽", callback_data="select_amount:200"),
+        InlineKeyboardButton("500₽", callback_data="select_amount:500"),
+        InlineKeyboardButton("1000₽", callback_data="select_amount:500")).add(
         InlineKeyboardButton("💰Другая сумма", callback_data="other_amount")).add(
         InlineKeyboardButton("🔙Назад", callback_data="back_to_profile")
     )
 
 
-def get_other_pay(user_id, amount):
+def get_stock_pay(user_id):
+    return InlineKeyboardMarkup(row_width=3).add(
+        InlineKeyboardButton("200₽ (+10%)", callback_data="select_amount:200"),
+        InlineKeyboardButton("500₽ (+10%)", callback_data="select_amount:500"),
+        InlineKeyboardButton("1000₽ (+10%)", callback_data="select_amount:1000")).add(
+        InlineKeyboardButton("💰Другая сумма (+10%)", callback_data="other_amount"))
+
+
+def get_pay_urls(urls):
     return InlineKeyboardMarkup(row_width=1).add(
-        InlineKeyboardButton("Оплатить", web_app=WebAppInfo(url=get_pay_url(user_id, amount))),
+        InlineKeyboardButton("Банковская карта", web_app=WebAppInfo(url=urls["lava"])),
+        InlineKeyboardButton("Криптовалюта", web_app=WebAppInfo(url=urls["freekassa"])),
+        InlineKeyboardButton("YooMoney", web_app=WebAppInfo(url=urls["freekassa"])),
         InlineKeyboardButton("🔙Назад", callback_data="back_to_choose_balance"))
 
 

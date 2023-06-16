@@ -3,11 +3,22 @@ from aiogram.types import Message, CallbackQuery, ChatActions, Update
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 
-from utils import db, ai, more_api
+from utils import db, ai, more_api, pay
 from states import user as states
 import keyboards.user as user_kb
 from config import bot_url, TOKEN
 from create_bot import dp
+
+
+async def remove_balance(bot: Bot, user_id):
+    await db.remove_balance(user_id)
+    user = await db.get_user(user_id)
+    if user["balance"] <= 50:
+        await db.update_stock_time(user_id)
+        await bot.send_message(user_id, """⚠️Заканчивается баланс!
+
+Успей пополнить в течении 24 часов и получи на счёт +10% от суммы пополнения ⤵️""",
+                               reply_markup=user_kb.get_stock_pay(user_id))
 
 
 async def get_mj(prompt, user_id, bot: Bot):
@@ -151,12 +162,23 @@ async def gen_img(message: Message, state: FSMContext):
     await db.change_default_ai(message.from_user.id, "image")
     await message.answer("""<b>Введите запрос для генерации изображения</b>
 
-Например: <code>Замерзшее бирюзовое озеро вокруг заснеженных горных вершин</code>
+<i>Например:</i> <code>Замерзшее бирюзовое озеро вокруг заснеженных горных вершин</code>
 
-<u><i>Английский язык бот понимает лучше.</i></u>
+<b><i>Для генерации на основе вашего фото:</i></b>
 
-Например: <code>Cat, psytrance, uhd, detailed, ornate, beautiful, 8k, photography</code>""",
+Фото + <code>Нарисуй меня в пустыне, в стиле Клод Воне</code>""",
                          reply_markup=await user_kb.get_menu(message.from_user.id))
+
+
+@dp.callback_query_handler(Text(startswith="select_amount"))
+async def select_amount(call: CallbackQuery):
+    amount = int(call.data.split(":")[1])
+    urls = {"lava": pay.get_pay_url_lava(call.from_user.id, amount),
+            "freekassa": pay.get_pay_url_freekassa(call.from_user.id, amount)}
+    await call.message.answer(f"""💰 Сумма: <b>{amount} рублей
+
+♻️ Средства зачислятся автоматически</b>""", reply_markup=user_kb.get_pay_urls(urls))
+    await call.answer()
 
 
 @dp.message_handler(state=states.EnterAmount.enter_amount)
@@ -169,9 +191,11 @@ async def create_other_order(message: Message, state: FSMContext):
     if amount < 200:
         await message.answer("Минимальная сумма платежа 200 рублей")
     else:
+        urls = {"lava": pay.get_pay_url_lava(call.from_user.id, amount),
+                "freekassa": pay.get_pay_url_freekassa(call.from_user.id, amount)}
         await message.answer(f"""💰 Сумма: <b>{amount} рублей
 
-♻️ Средства зачислятся автоматически</b>""", reply_markup=user_kb.get_other_pay(message.from_user.id, amount))
+♻️ Средства зачислятся автоматически</b>""", reply_markup=user_kb.get_pay_urls(urls))
         await state.finish()
 
 
@@ -223,7 +247,7 @@ async def try_prompt(call: CallbackQuery, state: FSMContext):
         if user["free_chatgpt"] > 0:
             await db.remove_chatgpt(call.from_user.id)
         else:
-            await db.remove_balance(call.from_user.id)
+            await remove_balance(call.bot, call.from_user.id)
         await db.add_action(call.from_user.id, "chatgpt")
     elif user["default_ai"] == "image":
         if user["balance"] < 10:
@@ -264,7 +288,7 @@ async def gen_prompt(message: Message, state: FSMContext):
         if user["free_chatgpt"] > 0:
             await db.remove_chatgpt(message.from_user.id)
         else:
-            await db.remove_balance(message.from_user.id)
+            await remove_balance(message.bot, message.from_user.id)
         await db.add_action(message.from_user.id, "chatgpt")
     elif user["default_ai"] == "image":
         if user["balance"] < 10:
