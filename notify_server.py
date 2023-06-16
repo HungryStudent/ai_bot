@@ -33,7 +33,7 @@ def init_scheduler():
 
 @app.post('/stock/{user_id}')
 async def create_notify_request(user_id: int):
-    run_date = datetime.now() + timedelta(seconds=2)
+    run_date = datetime.now() + timedelta(minutes=10)
     try:
         scheduler.add_job(stock_notify, "date", run_date=run_date, args=[user_id], id=str(user_id))
     except ConflictingIdError:
