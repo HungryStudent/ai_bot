@@ -28,17 +28,12 @@ async def add_balance(user_id, amount):
         amount = int(amount * 1.1)
     await db.add_balance(user_id, amount)
     await db.add_order(user_id, amount)
+    await bot.send_message(user_id, f"💰 Успешное пополнение ({amount} руб.)")
 
 
 @app.get('/api/pay/freekassa')
 async def check_pay_freekassa(MERCHANT_ORDER_ID, AMOUNT):
     await add_balance(int(MERCHANT_ORDER_ID), int(AMOUNT))
-    try:
-        await bot.send_message(int(MERCHANT_ORDER_ID), "💰Баланс успешно пополнен!")
-    except ChatNotFound:
-        pass
-    except Exception as e:
-        await bot.send_message(796644977, e)
     return 'YES'
 
 
@@ -48,13 +43,6 @@ async def check_pay_freekassa(data: LavaWebhook):
         raise HTTPException(200)
     user_id = int(data.order_id.split(":")[0])
     await add_balance(user_id, int(data.amount))
-    try:
-        await bot.send_message(user_id, "💰Баланс успешно пополнен!")
-    except ChatNotFound:
-        pass
-    except Exception as e:
-        await bot.send_message(796644977, e)
-
     raise HTTPException(200)
 
 
