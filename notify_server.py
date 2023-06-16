@@ -1,20 +1,12 @@
-from datetime import datetime
-
-from aiogram.utils.exceptions import ChatNotFound
-
-from config import LAVA_WEBHOOK_KEY
-from handlers.users import remove_balance
 from keyboards import user as user_kb
-from fastapi import FastAPI, Request, Header, HTTPException
+from fastapi import FastAPI
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 from datetime import datetime, timedelta
 
 from pydantic import BaseModel
 from create_bot import bot
-from io import BytesIO
 from utils import db
-import requests
 import uvicorn
 
 app = FastAPI()
@@ -41,7 +33,7 @@ def init_scheduler():
 
 @app.post('/stock/{user_id}')
 async def create_notify_request(user_id: int):
-    run_date = datetime.now() + timedelta(seconds=2)
+    run_date = datetime.now() + timedelta(minutes=10)
     try:
         scheduler.add_job(stock_notify, "date", run_date=run_date, args=[user_id], id=str(user_id))
     except ConflictingIdError:
