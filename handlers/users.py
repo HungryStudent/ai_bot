@@ -206,8 +206,8 @@ async def create_other_order(message: Message, state: FSMContext):
     if amount < 200:
         await message.answer("Минимальная сумма платежа 200 рублей")
     else:
-        urls = {"lava": pay.get_pay_url_lava(call.from_user.id, amount),
-                "freekassa": pay.get_pay_url_freekassa(call.from_user.id, amount)}
+        urls = {"lava": pay.get_pay_url_lava(message.from_user.id, amount),
+                "freekassa": pay.get_pay_url_freekassa(message.from_user.id, amount)}
         await message.answer(f"""💰 Сумма: <b>{amount} рублей
 
 ♻️ Средства зачислятся автоматически</b>""", reply_markup=user_kb.get_pay_urls(urls))
