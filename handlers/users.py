@@ -62,7 +62,8 @@ async def start_message(message: Message, state: FSMContext):
         if inviter_id in ["", str(message.from_user.id)]:
             inviter_id = 0
 
-        await db.add_user(message.from_user.id, message.from_user.username, message.from_user.first_name, inviter_id)
+        await db.add_user(message.from_user.id, message.from_user.username, message.from_user.first_name,
+                          int(inviter_id))
     await message.answer("""<b>NeuronAgent</b>🤖 - <i>Искусственный Интеллект.</i>
 
 <b>Текстовый формат или создание изображения?</b>""", reply_markup=await user_kb.get_menu(message.from_user.id))
