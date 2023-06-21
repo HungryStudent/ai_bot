@@ -1,7 +1,11 @@
+import string
+import random
+
 from aiogram.types import Message, CallbackQuery
 from aiogram.dispatcher import FSMContext
 
 import keyboards.admin as admin_kb
+from config import bot_url
 from create_bot import dp, bot
 from tabulate import tabulate
 import states.admin as states
@@ -85,3 +89,17 @@ async def start_send(message: Message, state: FSMContext):
         await asyncio.sleep(0.1)
     await message.answer(
         f"Количество получивших сообщение: {count}. Пользователей, заблокировавших бота: {block_count}")
+
+
+@dp.message_handler(commands="freemoney", is_admin=True)
+async def create_promocode(message: Message):
+    try:
+        amount, uses_count = message.get_args().split(" ")
+        amount = int(amount)
+        uses_count = int(uses_count)
+    except ValueError:
+        return await message.answer("Команда введена неверно. Используйте /freemoney {сумма} {кол-во активаций}")
+    code = ''.join(random.sample(string.ascii_uppercase, 10))
+    await db.create_promocode(amount, uses_count, code)
+    promocode_url = f"{bot_url}?start=p{code}"
+    await message.answer(f"Промокод создан, ссылка: {promocode_url}")

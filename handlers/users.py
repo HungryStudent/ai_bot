@@ -13,6 +13,24 @@ from config import bot_url, TOKEN, NOTIFY_URL
 from create_bot import dp
 
 
+async def check_promocode(user_id, code, bot: Bot):
+    print("ladjsnkajsdvn")
+    promocode = await db.get_promocode_by_code(code)
+    if promocode is None:
+        return
+    user_promocode = await db.get_user_promocode_by_promocode_id_and_user_id(promocode["promocode_id"],
+                                                                             user_id)
+    all_user_promocode = await db.get_all_user_promocode_by_promocode_id(promocode["promocode_id"])
+    print("tut")
+    print(user_promocode)
+    print(user_promocode is not None)
+    print(len(all_user_promocode) < promocode["uses_count"])
+    if user_promocode is None and len(all_user_promocode) < promocode["uses_count"]:
+        await db.create_user_promocode(promocode["promocode_id"], user_id)
+        await db.add_balance(user_id, promocode['amount'], is_promo=True)
+        await bot.send_message(user_id, f"Начислено {promocode['amount']} рублей за промокод")
+
+
 async def remove_balance(bot: Bot, user_id):
     await db.remove_balance(user_id)
     user = await db.get_user(user_id)
@@ -56,14 +74,29 @@ async def get_mj(prompt, user_id, bot: Bot):
 async def start_message(message: Message, state: FSMContext):
     await state.finish()
 
+    msg_args = message.get_args().split("_")
+    inviter_id = 0
+    code = None
+    for msg_arg in msg_args:
+        print(msg_arg)
+        if msg_arg[0] == "r":
+            try:
+                inviter_id = int(msg_arg[1:])
+            except ValueError:
+                continue
+            if inviter_id != str(message.from_user.id):
+                inviter_id = msg_arg[1:]
+        elif msg_arg[0] == "p":
+            code = msg_arg[1:]
+
     user = await db.get_user(message.from_user.id)
     if user is None:
-        inviter_id = message.get_args()
-        if inviter_id in ["", str(message.from_user.id)]:
-            inviter_id = 0
-
         await db.add_user(message.from_user.id, message.from_user.username, message.from_user.first_name,
                           int(inviter_id))
+
+    if code is not None:
+        await check_promocode(message.from_user.id, code, message.bot)
+
     await message.answer("""<b>NeuronAgent</b>🤖 - <i>Искусственный Интеллект.</i>
 
 <b>Текстовый формат или создание изображения?</b>""", reply_markup=await user_kb.get_menu(message.from_user.id))
@@ -93,7 +126,7 @@ async def ref_menu(message: Message):
 <i>Приводи друзей и зарабатывай 15% с их пополнений, пожизненно!</i>
 
 <b>⬇️ Твоя реферальная ссылка:</b>
-└ {bot_url}?start={message.from_user.id}
+└ {bot_url}?start=r{message.from_user.id}
 
 <b>🏅 Статистика:</b>
 ├ Лично приглашённых: <b>{ref_data["count_refs"]}</b>
@@ -102,7 +135,7 @@ async def ref_menu(message: Message):
 └ Доступно к выводу: <b>{ref_data["available_for_withdrawal"]}</b> рублей
 
 Ваша реферальная ссылка: ''',
-                               reply_markup=user_kb.get_ref_menu(f'{bot_url}?start={message.from_user.id}'))
+                               reply_markup=user_kb.get_ref_menu(f'{bot_url}?start=r{message.from_user.id}'))
 
 
 @dp.message_handler(state="*", text="⚙Аккаунт")

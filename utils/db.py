@@ -33,6 +33,14 @@ async def start():
     await conn.execute(
         "CREATE TABLE IF NOT EXISTS withdraws(id SERIAL PRIMARY KEY, user_id BIGINT, amount INT, withdraw_time INT)")
     await conn.execute("CREATE TABLE IF NOT EXISTS config(config_key VARCHAR(32), config_value VARCHAR(256))")
+    await conn.execute("CREATE TABLE IF NOT EXISTS promocode("
+                       "promocode_id SMALLSERIAL,"
+                       "amount INTEGER,"
+                       "uses_count SMALLINT,"
+                       "code VARCHAR(10) UNIQUE)")
+    await conn.execute("CREATE TABLE IF NOT EXISTS user_promocode("
+                       "promocode_id SMALLINT,"
+                       "user_id BIGINT)")
     row = await conn.fetchrow("SELECT config_value FROM config WHERE config_key = 'iam_token'")
     if row is None:
         await conn.execute("INSERT INTO config VALUES('iam_token', '1')")
@@ -65,10 +73,13 @@ async def update_task_id(user_id, task_id):
     conn: Connection = await get_conn()
     await conn.execute("UPDATE users SET task_id = $2 WHERE user_id = $1", user_id, task_id)
     await conn.close()
+
+
 async def update_is_pay(user_id, is_pay):
     conn: Connection = await get_conn()
     await conn.execute("UPDATE users SET is_pay = $2 WHERE user_id = $1", user_id, is_pay)
     await conn.close()
+
 
 async def change_default_ai(user_id, ai_type):
     conn: Connection = await get_conn()
@@ -93,10 +104,12 @@ async def update_stock_time(user_id, stock_time):
     await conn.execute("UPDATE users SET stock_time = $2 WHERE user_id = $1", user_id, stock_time)
     await conn.close()
 
+
 async def update_new_stock_time(user_id, new_stock_time):
     conn: Connection = await get_conn()
     await conn.execute("UPDATE users SET new_stock_time = $2 WHERE user_id = $1", user_id, new_stock_time)
     await conn.close()
+
 
 async def remove_balance(user_id):
     conn: Connection = await get_conn()
@@ -110,13 +123,14 @@ async def add_balance_from_admin(user_id, amount):
     await conn.close()
 
 
-async def add_balance(user_id, amount):
+async def add_balance(user_id, amount, is_promo=False):
     conn: Connection = await get_conn()
     ref_balance = int(float(amount) * 0.15)
     await conn.execute("UPDATE users SET balance = balance + $2 WHERE user_id = $1", user_id, amount)
-    await conn.execute(
-        "UPDATE users SET ref_balance = ref_balance + $2 WHERE user_id = (SELECT inviter_id FROM users WHERE user_id = $1)",
-        user_id, ref_balance)
+    if not is_promo:
+        await conn.execute(
+            "UPDATE users SET ref_balance = ref_balance + $2 WHERE user_id = (SELECT inviter_id FROM users WHERE user_id = $1)",
+            user_id, ref_balance)
     await conn.close()
 
 
@@ -217,3 +231,39 @@ async def reset_ref_balance(user_id):
     await conn.execute(
         "UPDATE users SET ref_balance = 0 WHERE user_id = $1", user_id)
     await conn.close()
+
+
+async def create_promocode(amount, uses_count, code):
+    conn: Connection = await get_conn()
+    await conn.execute(
+        "INSERT INTO promocode(amount, uses_count, code) VALUES ($1, $2, $3)", amount, uses_count, code)
+    await conn.close()
+
+
+async def get_promocode_by_code(code):
+    conn: Connection = await get_conn()
+    row = await conn.fetchrow("SELECT * FROM promocode WHERE code = $1", code)
+    await conn.close()
+    return row
+
+
+async def create_user_promocode(promocode_id, user_id):
+    conn: Connection = await get_conn()
+    await conn.execute(
+        "INSERT INTO user_promocode(promocode_id, user_id) VALUES ($1, $2)", promocode_id, user_id)
+    await conn.close()
+
+
+async def get_user_promocode_by_promocode_id_and_user_id(promocode_id, user_id):
+    conn: Connection = await get_conn()
+    row = await conn.fetchrow("SELECT * FROM user_promocode WHERE promocode_id = $1 and user_id = $2", promocode_id,
+                              user_id)
+    await conn.close()
+    return row
+
+
+async def get_all_user_promocode_by_promocode_id(promocode_id):
+    conn: Connection = await get_conn()
+    rows = await conn.fetch("SELECT * FROM user_promocode WHERE promocode_id = $1", promocode_id)
+    await conn.close()
+    return rows
