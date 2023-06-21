@@ -73,13 +73,14 @@ async def get_mdjrny(prompt, user_id):
     translated_prompt = await get_translate(prompt)
     try:
         res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url, ref=user_id)
-        if "status" not in res or not res["status"]:
+        if "success" not in res or not res["success"]:
             await send_error(res)
             res = await reserve_mj(translated_prompt, user_id)
             mj_api = "reserve"
             status = True
         else:
             mj_api = "main"
+            status = True
     except requests.exceptions.JSONDecodeError:
         res = await reserve_mj(translated_prompt, user_id)
         mj_api = "reserve"
