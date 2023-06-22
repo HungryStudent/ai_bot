@@ -20,14 +20,15 @@ async def check_promocode(user_id, code, bot: Bot):
     user_promocode = await db.get_user_promocode_by_promocode_id_and_user_id(promocode["promocode_id"],
                                                                              user_id)
     all_user_promocode = await db.get_all_user_promocode_by_promocode_id(promocode["promocode_id"])
-    print("tut")
-    print(user_promocode)
-    print(user_promocode is not None)
-    print(len(all_user_promocode) < promocode["uses_count"])
     if user_promocode is None and len(all_user_promocode) < promocode["uses_count"]:
         await db.create_user_promocode(promocode["promocode_id"], user_id)
         await db.add_balance(user_id, promocode['amount'], is_promo=True)
-        await bot.send_message(user_id, f"Начислено {promocode['amount']} рублей за промокод")
+        await bot.send_message(user_id, f"<b>Баланс пополнен на {promocode['amount']} рублей.</b>")
+    else:
+        if user_promocode is not None:
+            await bot.send_message(user_id, "<b>Данная ссылка была активирована Вами ранее.</b>")
+        elif len(all_user_promocode) >= promocode["uses_count"]:
+            await bot.send_message(user_id, "<b>Ссылка исчерпала максимальное количество активаций.</b>")
 
 
 async def remove_balance(bot: Bot, user_id):
