@@ -57,12 +57,17 @@ async def check_pay_freekassa(data: LavaWebhook):
 async def get_midjourney(request: Request):
     data = await request.json()
     photo_url = data["imageUrl"]
-    if photo_url == '':
-        await bot.send_message(796644977, data)
-    response = requests.get(photo_url)
-    img = BytesIO(response.content)
     user_id = int(data["ref"])
     user = await db.get_user(user_id)
+    if photo_url == '':
+        if "content" in data:
+            if data["content"] == "Request cancelled due to image filters":
+                await bot.send_message(user["user_id"], "Фото не прошло фильтры, попробуйте использовать другое фото")
+        else:
+            await bot.send_message(796644977, data)
+        return
+    response = requests.get(photo_url)
+    img = BytesIO(response.content)
     await bot.send_photo(user["user_id"], photo=img,
                          reply_markup=user_kb.get_try_prompt_or_choose(data["buttonMessageId"], "main"))
     if user["free_image"] > 0:
