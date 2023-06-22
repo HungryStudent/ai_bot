@@ -76,17 +76,18 @@ async def start_message(message: Message, state: FSMContext):
     msg_args = message.get_args().split("_")
     inviter_id = 0
     code = None
-    for msg_arg in msg_args:
-        print(msg_arg)
-        if msg_arg[0] == "r":
-            try:
-                inviter_id = int(msg_arg[1:])
-            except ValueError:
-                continue
-            if inviter_id != str(message.from_user.id):
-                inviter_id = msg_arg[1:]
-        elif msg_arg[0] == "p":
-            code = msg_arg[1:]
+    if msg_args != ['']:
+        for msg_arg in msg_args:
+            print(msg_arg)
+            if msg_arg[0] == "r":
+                try:
+                    inviter_id = int(msg_arg[1:])
+                except ValueError:
+                    continue
+                if inviter_id != str(message.from_user.id):
+                    inviter_id = msg_arg[1:]
+            elif msg_arg[0] == "p":
+                code = msg_arg[1:]
 
     user = await db.get_user(message.from_user.id)
     if user is None:
