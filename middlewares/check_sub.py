@@ -17,7 +17,7 @@ class CheckRegMiddleware(BaseMiddleware):
         else:
             return
         try:
-            if update.message.photo is None and update.message and '/start' in update.message.text:
+            if '/start' in update.message.text:
                 return
         except AttributeError:
             pass

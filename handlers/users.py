@@ -14,7 +14,6 @@ from create_bot import dp
 
 
 async def check_promocode(user_id, code, bot: Bot):
-    print("ladjsnkajsdvn")
     promocode = await db.get_promocode_by_code(code)
     if promocode is None:
         return
