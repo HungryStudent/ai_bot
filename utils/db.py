@@ -267,3 +267,14 @@ async def get_all_user_promocode_by_promocode_id(promocode_id):
     rows = await conn.fetch("SELECT * FROM user_promocode WHERE promocode_id = $1", promocode_id)
     await conn.close()
     return rows
+
+
+async def get_promo_for_stat():
+    conn: Connection = await get_conn()
+    rows = await conn.fetch("""select code, amount, uses_count, count(up.user_id) as users_count
+from promocode
+         left join user_promocode up on promocode.promocode_id = up.promocode_id
+group by promocode.promocode_id, amount, uses_count, code
+having count(up.user_id) < uses_count""")
+    await conn.close()
+    return rows

@@ -3,5 +3,6 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemo
 
 cancel = ReplyKeyboardMarkup(resize_keyboard=True, row_width=1).add(KeyboardButton("Отмена"))
 
-ref_menu = InlineKeyboardMarkup(row_width=1).add(
-    InlineKeyboardButton('Партнерская программа', callback_data='admin_ref_menu'))
+admin_menu = InlineKeyboardMarkup(row_width=1).add(
+    InlineKeyboardButton('Партнерская программа', callback_data='admin_ref_menu'),
+    InlineKeyboardButton('Бонус ссылки', callback_data='admin_promo_menu'))

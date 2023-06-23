@@ -6,7 +6,7 @@ from aiogram.dispatcher import FSMContext
 
 import keyboards.admin as admin_kb
 from config import bot_url
-from create_bot import dp, bot
+from create_bot import dp
 from tabulate import tabulate
 import states.admin as states
 from utils import db
@@ -30,7 +30,7 @@ async def show_stats(message: Message):
 Пополнений: {stats_data['orders_count']}
 Повторные оплаты: {stats_data['repeated_orders_count']}
 Пополнений за сегодня: {stats_data['today_orders_count']} ({stats_data['today_orders_sum']} руб.)""",
-                         reply_markup=admin_kb.ref_menu)
+                         reply_markup=admin_kb.admin_menu)
 
 
 @dp.callback_query_handler(is_admin=True, text='admin_ref_menu')
@@ -103,3 +103,14 @@ async def create_promocode(message: Message):
     await db.create_promocode(amount, uses_count, code)
     promocode_url = f"{bot_url}?start=p{code}"
     await message.answer(f"Промокод создан, ссылка: {promocode_url}")
+
+
+@dp.callback_query_handler(is_admin=True, text='admin_promo_menu')
+async def admin_promo_menu(call: CallbackQuery):
+    promocodes = await db.get_promo_for_stat()
+    for promocode in promocodes:
+        pass
+
+    await call.message.answer(
+        f'<b>Бонус ссылки</b>\n\n<pre>{tabulate(promocodes, tablefmt="jira", numalign="left")}</pre>')
+    await call.answer()
