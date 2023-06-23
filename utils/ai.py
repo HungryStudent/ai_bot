@@ -74,6 +74,9 @@ async def get_mdjrny(prompt, user_id):
     try:
         res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url, ref=user_id)
         if "success" not in res or not res["success"]:
+            if "isNaughty" in res:
+                return {"status": False, "mj_api": "main", "error": "isNaughty error",
+                        "error_details": f"Найдено запрещённое слово: {res['phrase']}"}
             await send_error(res)
             res = await reserve_mj(translated_prompt, user_id)
             mj_api = "reserve"

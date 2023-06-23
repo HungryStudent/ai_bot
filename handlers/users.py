@@ -65,6 +65,8 @@ async def get_mj(prompt, user_id, bot: Bot):
         msg_text = "Произошла ошибка, повторите попытку позже"
         if res["error"] == "banned word error":
             msg_text = "Запрещённое слово"
+        elif res["error"] == "isNaughty error":
+            msg_text = res["error_details"]
         await bot.send_message(user_id, msg_text)
     if res["mj_api"] == "reserve":
         await db.update_task_id(user_id, res["task_id"])
