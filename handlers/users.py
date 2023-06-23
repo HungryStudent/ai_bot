@@ -95,12 +95,12 @@ async def start_message(message: Message, state: FSMContext):
         await db.add_user(message.from_user.id, message.from_user.username, message.from_user.first_name,
                           int(inviter_id))
 
+    await message.answer("""<b>NeuronAgent</b>🤖 - <i>2 нейросети в одном месте!</i>
+
+<b>ChatGPT или Midjourney?</b>""", reply_markup=await user_kb.get_menu(message.from_user.id))
+
     if code is not None:
         await check_promocode(message.from_user.id, code, message.bot)
-
-    await message.answer("""<b>NeuronAgent</b>🤖 - <i>Искусственный Интеллект.</i>
-
-<b>Текстовый формат или создание изображения?</b>""", reply_markup=await user_kb.get_menu(message.from_user.id))
 
 
 @dp.callback_query_handler(text="check_sub")
@@ -108,9 +108,9 @@ async def check_sub(call: CallbackQuery):
     user = await db.get_user(call.from_user.id)
     if user is None:
         await db.add_user(call.from_user.id, call.from_user.username, call.from_user.first_name, 0)
-    await call.message.answer("""<b>NeuronAgent</b>🤖 - <i>Искусственный Интеллект.</i>
+    await call.message.answer("""<b>NeuronAgent</b>🤖 - <i>2 нейросети в одном месте!</i>
 
-<b>Текстовый формат или создание изображения?</b>""", reply_markup=await user_kb.get_menu(call.from_user.id))
+<b>ChatGPT или Midjourney?</b>""", reply_markup=await user_kb.get_menu(call.from_user.id))
     await call.answer()
 
 
