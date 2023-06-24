@@ -9,7 +9,7 @@ from aiogram.dispatcher import FSMContext
 from utils import db, ai, more_api, pay
 from states import user as states
 import keyboards.user as user_kb
-from config import bot_url, TOKEN, NOTIFY_URL
+from config import bot_url, TOKEN, NOTIFY_URL, bug_id
 from create_bot import dp
 
 
@@ -342,6 +342,9 @@ async def photo_imagine(message: Message, state: FSMContext):
     file = await message.photo[-1].get_file()
     photo_url = f"https://api.telegram.org/file/bot{TOKEN}/{file.file_path}"
     ds_photo_url = await more_api.upload_photo_to_host(photo_url)
+    if ds_photo_url == "error":
+        await message.answer("Генерация с фото недоступна, повторите попытку позже")
+        await message.bot.send_message(bug_id, "Необходимо заменить api ключ фотохостинга")
     prompt = ds_photo_url + " " + message.caption
     await state.update_data(prompt=prompt)
     user = await db.get_user(message.from_user.id)

@@ -36,4 +36,6 @@ async def upload_photo_to_host(photo):
         async with session.post(
                 f'https://api.imgbb.com/1/upload?key={IMGBB_API_KEY}', data=payload) as resp:
             data = await resp.json()
+            if "data" not in data:
+                return "error"
             return data["data"]["url"]
