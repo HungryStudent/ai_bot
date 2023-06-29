@@ -82,8 +82,6 @@ async def get_gpt(prompt, messages, user_id, bot: Bot):
     prompt += f"\n{lang_text[user['chat_gpt_lang']]}"
     messages.append({"role": "user", "content": prompt})
 
-    await bot.send_message(user_id, "Ожидайте, генерирую ответ..🕙",
-                           reply_markup=user_kb.get_menu(user["default_ai"]))
     await bot.send_chat_action(user_id, ChatActions.TYPING)
 
     res = await ai.get_gpt(messages)
@@ -127,7 +125,7 @@ async def start_message(message: Message, state: FSMContext):
 
     await message.answer("""<b>NeuronAgent</b>🤖 - <i>2 нейросети в одном месте!</i>
 
-<b>ChatGPT или Midjourney?</b>""", reply_markup=user_kb.get_menu(user["default_ai"]))
+<b>ChatGPT или Midjourney?</b>""", reply_markup=user_kb.get_menu("chatgpt"))
 
     if code is not None:
         await check_promocode(message.from_user.id, code, message.bot)
