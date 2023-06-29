@@ -2,7 +2,7 @@ from datetime import datetime
 
 from aiogram.utils.exceptions import ChatNotFound
 
-from config import LAVA_WEBHOOK_KEY, NOTIFY_URL
+from config import LAVA_WEBHOOK_KEY, NOTIFY_URL, bug_id
 from handlers.users import remove_balance
 from keyboards import user as user_kb
 from fastapi import FastAPI, Request, Header, HTTPException
@@ -59,12 +59,14 @@ async def get_midjourney(request: Request):
     photo_url = data["imageUrl"]
     user_id = int(data["ref"])
     user = await db.get_user(user_id)
+    send_error_msg = False
     if photo_url == '':
         if "content" in data:
             if data["content"] == "Request cancelled due to image filters":
-                await bot.send_message(user["user_id"], "Фото не прошло фильтры, попробуйте использовать другое фото")
-        else:
-            await bot.send_message(796644977, data)
+                await bot.send_message(user["user_id"], "Данное фото не прошло фильтры, попробуйте другое")
+                send_error_msg = True
+        if not send_error_msg:
+            await bot.send_message(bug_id, data)
         return
     response = requests.get(photo_url)
     img = BytesIO(response.content)
