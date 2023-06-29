@@ -68,7 +68,7 @@ def get_pay(user_id, stock=0):
     return InlineKeyboardMarkup(row_width=3).add(
         InlineKeyboardButton("200₽" + stock_text, callback_data="select_amount:200"),
         InlineKeyboardButton("500₽" + stock_text, callback_data="select_amount:500"),
-        InlineKeyboardButton("1000₽" + stock_text, callback_data="select_amount:500")).add(
+        InlineKeyboardButton("1000₽" + stock_text, callback_data="select_amount:1000")).add(
         InlineKeyboardButton("💰Другая сумма" + stock_text, callback_data="other_amount")).add(
         InlineKeyboardButton("🔙Назад", callback_data="back_to_profile")
     )
