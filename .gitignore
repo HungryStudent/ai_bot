@@ -3,3 +3,4 @@ venv
 .env
 config.py
 utils/database.db
+**/__pycache__/
