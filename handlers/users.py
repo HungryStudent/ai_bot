@@ -311,6 +311,8 @@ async def clear_content(call: CallbackQuery, state: FSMContext):
 @dp.callback_query_handler(Text(startswith="try_prompt"))
 async def try_prompt(call: CallbackQuery, state: FSMContext):
     data = await state.get_data()
+    if "prompt" not in data:
+        return await call.message.answer("Попробуйте заново ввести запрос")
     await call.answer()
 
     user = await db.get_user(call.from_user.id)
