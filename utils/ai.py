@@ -1,14 +1,15 @@
-import aiohttp
+import openai
 import requests
 from aiogram import Bot
 from midjourney_api import TNL
 from googletranslatepy import Translator
 
-import change_token
-from config import OPENAPI_TOKEN, ya_folder, midjourney_webhook_url, MJ_API_KEY, TNL_API_KEY, TOKEN
-from utils import db
+from config import OPENAPI_TOKEN, midjourney_webhook_url, MJ_API_KEY, TNL_API_KEY, TOKEN
 
 tnl = TNL(TNL_API_KEY)
+
+openai.api_key = OPENAPI_TOKEN
+openai.log = "error"
 
 
 async def send_error(text):
@@ -43,30 +44,17 @@ async def get_translate(text):
     return translate
 
 
-async def get_gpt(prompt, lang):
-    lang_text = {"en": "compose an answer in English", "ru": "составь ответ на русском языке"}
-    prompt += f"\n{lang_text[lang]}"
-    async with aiohttp.ClientSession() as session:
-        async with session.post('https://api.openai.com/v1/completions',
-                                headers={'Authorization': f'Bearer {OPENAPI_TOKEN}',
-                                         'Content-Type': 'application/json'},
-                                json={'model': 'text-davinci-003',
-                                      "prompt": prompt,
-                                      "max_tokens": 1024,
-                                      "temperature": 0.5,
-                                      "top_p": 1,
-                                      "frequency_penalty": 0,
-                                      "presence_penalty": 0
-                                      }) as resp:
-            response = await resp.json()
-            try:
-                return response["choices"][0]["text"]
-            except KeyError:
-                await send_error(response["error"]["message"])
-                print(f"Ошибка {response}")
-                if "That model is currently overloaded with other requests" in response["error"]["message"]:
-                    return "Модель ChatGPT сейчас перегружена запросами, повторите запрос позже."
-                return "Генерация текста в данный момент недоступна, попробуйте чуть позже"
+async def get_gpt(messages):
+    status = True
+    try:
+        response = await openai.ChatCompletion.acreate(model="gpt-3.5-turbo",
+                                                       messages=messages[-10:])
+    except openai.error.ServiceUnavailableError:
+        status = False
+        content = "Генерация текста временно недоступна, повторите запрос позднее"
+    if status:
+        content = response["choices"][0]["message"]["content"]
+    return {"status": status, "content": content}
 
 
 async def get_mdjrny(prompt, user_id):

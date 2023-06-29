@@ -19,6 +19,9 @@ else:
                         format='%(asctime)s - %(levelname)s - %(message)s')
     log = logging.getLogger("logs")
 
+logger = logging.getLogger('openai')
+logger.setLevel(logging.WARNING)
+
 stor = MemoryStorage()
 bot = Bot(token=TOKEN, parse_mode="HTML")
 dp = Dispatcher(bot, storage=stor)

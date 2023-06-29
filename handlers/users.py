@@ -55,8 +55,12 @@ async def not_enough_balance(bot: Bot, user_id):
 
 
 async def get_mj(prompt, user_id, bot: Bot):
+    user = await db.get_user(user_id)
+    if user["balance"] < 10 and user["free_image"] == 0:
+        await not_enough_balance(bot, user_id)
+        return
     await bot.send_message(user_id, "Ожидайте, генерирую изображение..🕙",
-                           reply_markup=await user_kb.get_menu(user_id))
+                           reply_markup=user_kb.get_menu(user["default_ai"]))
     await bot.send_chat_action(user_id, ChatActions.UPLOAD_PHOTO)
 
     res = await ai.get_mdjrny(prompt, user_id)
@@ -70,6 +74,30 @@ async def get_mj(prompt, user_id, bot: Bot):
         await bot.send_message(user_id, msg_text)
     if res["mj_api"] == "reserve":
         await db.update_task_id(user_id, res["task_id"])
+
+
+async def get_gpt(prompt, messages, user_id, bot: Bot):
+    user = await db.get_user(user_id)
+    lang_text = {"en": "compose an answer in English", "ru": "составь ответ на русском языке"}
+    prompt += f"\n{lang_text[user['chat_gpt_lang']]}"
+    messages.append({"role": "user", "content": prompt})
+
+    await bot.send_message(user_id, "Ожидайте, генерирую ответ..🕙",
+                           reply_markup=user_kb.get_menu(user["default_ai"]))
+    await bot.send_chat_action(user_id, ChatActions.TYPING)
+
+    res = await ai.get_gpt(messages)
+    await bot.send_message(user_id, res["content"], reply_markup=user_kb.clear_content)
+    if not res["status"]:
+        return
+    messages.append({"role": "assistant", "content": res["content"]})
+
+    if user["free_chatgpt"] > 0:
+        await db.remove_chatgpt(user_id)
+    else:
+        await remove_balance(bot, user_id)
+    await db.add_action(user_id, "chatgpt")
+    return messages
 
 
 @dp.message_handler(state="*", commands='start')
@@ -99,7 +127,7 @@ async def start_message(message: Message, state: FSMContext):
 
     await message.answer("""<b>NeuronAgent</b>🤖 - <i>2 нейросети в одном месте!</i>
 
-<b>ChatGPT или Midjourney?</b>""", reply_markup=await user_kb.get_menu(message.from_user.id))
+<b>ChatGPT или Midjourney?</b>""", reply_markup=user_kb.get_menu(user["default_ai"]))
 
     if code is not None:
         await check_promocode(message.from_user.id, code, message.bot)
@@ -112,7 +140,7 @@ async def check_sub(call: CallbackQuery):
         await db.add_user(call.from_user.id, call.from_user.username, call.from_user.first_name, 0)
     await call.message.answer("""<b>NeuronAgent</b>🤖 - <i>2 нейросети в одном месте!</i>
 
-<b>ChatGPT или Midjourney?</b>""", reply_markup=await user_kb.get_menu(call.from_user.id))
+<b>ChatGPT или Midjourney?</b>""", reply_markup=user_kb.get_menu(user["default_ai"]))
     await call.answer()
 
 
@@ -197,7 +225,7 @@ async def ask_question(message: Message, state: FSMContext):
 <i>Английский язык бот понимает лучше.</i>
 
 Например: <code>Write a blog post about the environmental benefits of segregated waste collection for a broad audience</code>""",
-                         reply_markup=await user_kb.get_menu(message.from_user.id))
+                         reply_markup=user_kb.get_menu("chatgpt"))
 
 
 @dp.message_handler(state="*", text="👨🏻‍💻Поддержка")
@@ -219,7 +247,7 @@ async def gen_img(message: Message, state: FSMContext):
 <b><i>Для генерации на основе вашего фото:</i></b>
 
 Фото + <code>Нарисуй меня в пустыне, в стиле Клод Воне</code>""",
-                         reply_markup=await user_kb.get_menu(message.from_user.id))
+                         reply_markup=user_kb.get_menu("image"))
 
 
 @dp.callback_query_handler(Text(startswith="select_amount"))
@@ -254,7 +282,8 @@ async def create_other_order(message: Message, state: FSMContext):
 @dp.message_handler(state="*", text="Отмена")
 async def cancel(message: Message, state: FSMContext):
     await state.finish()
-    await message.answer("Ввод остановлен", reply_markup=await user_kb.get_menu(message.from_user.id))
+    user = await db.get_user(message.from_user.id)
+    await message.answer("Ввод остановлен", reply_markup=user_kb.get_menu(user["default_ai"]))
 
 
 @dp.callback_query_handler(Text(startswith="choose_image:"))
@@ -263,13 +292,22 @@ async def choose_image(call: CallbackQuery):
     buttonMessageId = call.data.split(":")[1]
     image_id = int(call.data.split(":")[2])
     mj_api = call.data.split(":")[3]
+    user = await db.get_user(call.from_user.id)
     await call.message.answer("Ожидайте, сохраняю изображение в отличном качестве…⏳",
-                              reply_markup=await user_kb.get_menu(call.from_user.id))
+                              reply_markup=user_kb.get_menu(user["default_ai"]))
     res = await ai.get_choose_mdjrny(buttonMessageId, image_id, call.from_user.id, mj_api)
     if not res["status"]:
         await call.message.answer("Произошла ошибка, повторите попытку позже")
     elif mj_api == "reserve":
         await call.message.answer_photo(res["image_url"])
+
+
+@dp.callback_query_handler(text="clear_content")
+async def clear_content(call: CallbackQuery, state: FSMContext):
+    user = await db.get_user(call.from_user.id)
+    await state.finish()
+    await call.message.answer("Диалог завершен", reply_markup=user_kb.get_menu(user["default_ai"]))
+    await call.answer()
 
 
 @dp.callback_query_handler(Text(startswith="try_prompt"))
@@ -279,27 +317,7 @@ async def try_prompt(call: CallbackQuery, state: FSMContext):
 
     user = await db.get_user(call.from_user.id)
 
-    if user["default_ai"] == "chatgpt":
-        if user["balance"] < 10:
-            if user["free_chatgpt"] == 0:
-                await not_enough_balance(call.bot, call.from_user.id)
-                return
-        await call.message.answer("Ожидайте, генерирую ответ..🕙",
-                                  reply_markup=await user_kb.get_menu(call.from_user.id))
-        await call.message.answer_chat_action(ChatActions.TYPING)
-        result = await ai.get_gpt(data['prompt'], user["chat_gpt_lang"])
-        await call.message.answer(result, reply_markup=user_kb.get_try_prompt('chatgpt'))
-        user = await db.get_user(call.from_user.id)
-        if user["free_chatgpt"] > 0:
-            await db.remove_chatgpt(call.from_user.id)
-        else:
-            await remove_balance(call.bot, call.from_user.id)
-        await db.add_action(call.from_user.id, "chatgpt")
-    elif user["default_ai"] == "image":
-        if user["balance"] < 10:
-            if user["free_image"] == 0:
-                await not_enough_balance(call.bot, call.from_user.id)
-                return
+    if user["default_ai"] == "image":
         await get_mj(data['prompt'], call.from_user.id, call.bot)
 
 
@@ -309,28 +327,19 @@ async def gen_prompt(message: Message, state: FSMContext):
     user = await db.get_user(message.from_user.id)
     if user is None:
         await message.answer("Введите команду /start для перезагрузки бота")
-        await message.bot.send_message(796644977, message.from_user.id)
-        return
+        return await message.bot.send_message(796644977, message.from_user.id)
+
     if user["default_ai"] == "chatgpt":
-        if user["balance"] < 10:
-            if user["free_chatgpt"] == 0:
-                await not_enough_balance(message.bot, message.from_user.id)
-                return
-        await message.answer("Ожидайте, генерирую ответ..🕙", reply_markup=await user_kb.get_menu(message.from_user.id))
-        await message.answer_chat_action(ChatActions.TYPING)
-        result = await ai.get_gpt(message.text, user["chat_gpt_lang"])
-        await message.answer(result, reply_markup=user_kb.get_try_prompt('chatgpt'))
-        user = await db.get_user(message.from_user.id)
-        if user["free_chatgpt"] > 0:
-            await db.remove_chatgpt(message.from_user.id)
-        else:
-            await remove_balance(message.bot, message.from_user.id)
-        await db.add_action(message.from_user.id, "chatgpt")
+        if user["balance"] < 10 and user["free_chatgpt"] == 0:
+            return await not_enough_balance(message.bot, message.from_user.id)
+
+        data = await state.get_data()
+        messages = [] if "messages" not in data else data["messages"]
+        update_messages = await get_gpt(prompt=message.text, messages=messages, user_id=message.from_user.id,
+                                        bot=message.bot)
+        await state.update_data(messages=update_messages)
+
     elif user["default_ai"] == "image":
-        if user["balance"] < 10:
-            if user["free_image"] == 0:
-                await not_enough_balance(message.bot, message.from_user.id)
-                return
         await get_mj(message.text, message.from_user.id, message.bot)
 
 
@@ -347,10 +356,4 @@ async def photo_imagine(message: Message, state: FSMContext):
         await message.bot.send_message(bug_id, "Необходимо заменить api ключ фотохостинга")
     prompt = ds_photo_url + " " + message.caption
     await state.update_data(prompt=prompt)
-    user = await db.get_user(message.from_user.id)
-    if user["balance"] < 10:
-        if user["free_image"] == 0:
-            await not_enough_balance(message.bot, message.from_user.id)
-            return
-
     await get_mj(prompt, message.from_user.id, message.bot)

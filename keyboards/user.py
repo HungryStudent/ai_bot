@@ -1,7 +1,6 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, \
     ReplyKeyboardRemove, WebAppInfo
 
-from utils import db
 from urllib import parse
 
 withdraw_ref_menu = InlineKeyboardMarkup(row_width=2).add(
@@ -25,6 +24,9 @@ partner = InlineKeyboardMarkup(row_width=1).add(
 back_to_choose = InlineKeyboardMarkup(row_width=1).add(
     InlineKeyboardButton("🔙Назад", callback_data="back_to_choose_balance"))
 
+clear_content = InlineKeyboardMarkup(row_width=1).add(
+    InlineKeyboardButton("Завершить диалог", callback_data="clear_content"))
+
 
 def get_account(lang):
     lang_text = {"en": "ENG", "ru": "RUS"}
@@ -38,15 +40,14 @@ def get_try_prompt(ai_type):
         InlineKeyboardButton("🔄 Другой вариант", callback_data=f"try_prompt:{ai_type}"))
 
 
-async def get_menu(user_id):
-    user = await db.get_user(user_id)
-    if user["default_ai"] == "chatgpt":
+def get_menu(default_ai):
+    if default_ai == "chatgpt":
         return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬ChatGPT✅"),
                                                                           KeyboardButton("🎨Midjourney"),
                                                                           KeyboardButton("⚙Аккаунт"),
                                                                           KeyboardButton("👨🏻‍💻Поддержка"),
                                                                           KeyboardButton("🤝Партнерская программа"))
-    elif user["default_ai"] == "image":
+    elif default_ai == "image":
         return ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(KeyboardButton("💬ChatGPT"),
                                                                           KeyboardButton("🎨Midjourney✅"),
                                                                           KeyboardButton("⚙Аккаунт"),
