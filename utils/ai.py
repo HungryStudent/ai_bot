@@ -110,7 +110,7 @@ async def get_choose_mdjrny(buttonMessageId, image_id, user_id, mj_api):
                              webhook_override=midjourney_webhook_url + "/choose")
             return {"status": True}
         except requests.exceptions.JSONDecodeError:
-            return {"status": True}
+            return {"status": False}
     elif mj_api == "reserve":
         headers = {
             'Authorization': MJ_API_KEY,
@@ -141,3 +141,13 @@ async def get_choose_mdjrny(buttonMessageId, image_id, user_id, mj_api):
     # if "errors" in data:
     #     pass
     # return data["imageURL"]
+
+
+async def press_mj_button(button, buttonMessageId, user_id):
+    status = True
+    try:
+        res = tnl.button(button, buttonMessageId, ref=user_id,
+                         webhook_override=midjourney_webhook_url + "/button")
+    except requests.exceptions.JSONDecodeError:
+        status = False
+    return status

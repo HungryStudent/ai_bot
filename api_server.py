@@ -1,11 +1,9 @@
 from datetime import datetime
 
-from aiogram.utils.exceptions import ChatNotFound
-
-from config import LAVA_WEBHOOK_KEY, NOTIFY_URL, bug_id
+from config import NOTIFY_URL, bug_id
 from handlers.users import remove_balance
 from keyboards import user as user_kb
-from fastapi import FastAPI, Request, Header, HTTPException
+from fastapi import FastAPI, Request, HTTPException
 from pydantic import BaseModel
 from create_bot import bot
 from io import BytesIO
@@ -76,7 +74,8 @@ async def get_midjourney(request: Request):
     response = requests.get(photo_url)
     img = BytesIO(response.content)
     await bot.send_photo(user["user_id"], photo=img,
-                         reply_markup=user_kb.get_try_prompt_or_choose(data["buttonMessageId"], "main"))
+                         reply_markup=user_kb.get_try_prompt_or_choose(data["buttonMessageId"], "main",
+                                                                       include_try=True))
     if user["free_image"] > 0:
         await db.remove_image(user["user_id"])
     else:
@@ -85,11 +84,27 @@ async def get_midjourney(request: Request):
 
 
 @app.post('/api/midjourney/choose')
-async def get_midjourney(request: Request):
+async def get_midjourney_choose(request: Request):
     data = await request.json()
     user_id = int(data["ref"])
     photo_url = data["imageUrl"]
-    await bot.send_photo(user_id, photo_url)
+    await bot.send_photo(user_id, photo_url, reply_markup=user_kb.get_choose(data["buttonMessageId"]))
+
+
+@app.post('/api/midjourney/button')
+async def get_midjourney_button(request: Request):
+    data = await request.json()
+    user_id = int(data["ref"])
+    photo_url = data["imageUrl"]
+    await bot.send_photo(user_id, photo_url,
+                         reply_markup=user_kb.get_try_prompt_or_choose(data["buttonMessageId"], "main"))
+
+    user = await db.get_user(user_id)
+    if user["free_image"] > 0:
+        await db.remove_image(user["user_id"])
+    else:
+        await remove_balance(bot, user["user_id"])
+    await db.add_action(user["user_id"], "image_btn")
 
 
 @app.post('/api/midjourney_reserve')
@@ -115,7 +130,7 @@ async def get_midjourney(user_id: int, request: Request):
 
     user = await db.get_user(user_id)
     await bot.send_photo(user_id, photo=img,
-                         reply_markup=user_kb.get_try_prompt_or_choose(user["task_id"], "reserve"))
+                         reply_markup=user_kb.get_try_prompt_or_choose(user["task_id"], "reserve", include_try=True))
     if user["free_image"] > 0:
         await db.remove_image(user_id)
     else:

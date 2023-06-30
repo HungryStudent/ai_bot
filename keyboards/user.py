@@ -92,10 +92,20 @@ def get_ref_menu(url):
                                                  InlineKeyboardButton('🔙Назад', callback_data='check_sub'))
 
 
-def get_try_prompt_or_choose(buttonMessageId, mj_api):
-    return InlineKeyboardMarkup(row_width=2).add(
+def get_try_prompt_or_choose(buttonMessageId, mj_api, include_try=False):
+    kb = InlineKeyboardMarkup(row_width=2).add(
         InlineKeyboardButton("u1", callback_data=f"choose_image:{buttonMessageId}:1:{mj_api}"),
         InlineKeyboardButton("u2", callback_data=f"choose_image:{buttonMessageId}:2:{mj_api}"),
         InlineKeyboardButton("u3", callback_data=f"choose_image:{buttonMessageId}:3:{mj_api}"),
-        InlineKeyboardButton("u4", callback_data=f"choose_image:{buttonMessageId}:4:{mj_api}"),
-        InlineKeyboardButton("🔄 Ещё варианты", callback_data=f"try_prompt:image"))
+        InlineKeyboardButton("u4", callback_data=f"choose_image:{buttonMessageId}:4:{mj_api}"))
+    if include_try:
+        kb.add(InlineKeyboardButton("🔄 Ещё варианты", callback_data=f"try_prompt:image"))
+    return kb
+
+
+def get_choose(buttonMessageId):
+    return InlineKeyboardMarkup(row_width=2).add(
+        InlineKeyboardButton("🪄 Vary (Subtle)", callback_data=f"change_image:vary:strong:{buttonMessageId}"),
+        InlineKeyboardButton("🪄 Vary (Strong)", callback_data=f"change_image:vary:subtle:{buttonMessageId}"),
+        InlineKeyboardButton("🔍 Zoom Out 2x", callback_data=f"change_image:zoom:2:{buttonMessageId}"),
+        InlineKeyboardButton("🔍 Zoom Out 1.5x", callback_data=f"change_image:zoom:1.5:{buttonMessageId}"))

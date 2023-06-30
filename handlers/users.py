@@ -12,6 +12,8 @@ import keyboards.user as user_kb
 from config import bot_url, TOKEN, NOTIFY_URL, bug_id
 from create_bot import dp
 
+vary_types = {"subtle": "Subtle", "strong": "Strong"}
+
 
 async def check_promocode(user_id, code, bot: Bot):
     promocode = await db.get_promocode_by_code(code)
@@ -298,6 +300,33 @@ async def choose_image(call: CallbackQuery):
         await call.message.answer("Произошла ошибка, повторите попытку позже")
     elif mj_api == "reserve":
         await call.message.answer_photo(res["image_url"])
+
+
+@dp.callback_query_handler(Text(startswith="change_image:"))
+async def change_image(call: CallbackQuery):
+    await call.answer()
+    buttonMessageId = call.data.split(":")[3]
+    button_type = call.data.split(":")[1]
+    value = call.data.split(":")[2]
+    user = await db.get_user(call.from_user.id)
+    await call.message.answer("Ожидайте, обрабатываю изображение⏳",
+                              reply_markup=user_kb.get_menu(user["default_ai"]))
+
+    button = None
+    if button_type == "zoom":
+        button = f"🔍 Zoom Out {value}x"
+    elif button_type == "vary":
+        button = f"🪄 Vary ({vary_types[value]})"
+
+    if button is None:
+        await call.bot.send_message(bug_id, f"Ошибка в кнопках: {call.data}")
+        return await call.message.answer("Произошла ошибка, повторите попытку позже")
+
+    status = await ai.press_mj_button(button, buttonMessageId, call.from_user.id)
+
+    if not status:
+        await call.bot.send_message(bug_id, f"Ошибка в кнопках: {call.data}")
+        await call.message.answer("Произошла ошибка, повторите попытку позже")
 
 
 @dp.callback_query_handler(text="clear_content")
