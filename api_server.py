@@ -1,4 +1,7 @@
+import asyncio
 from datetime import datetime
+
+from aiogram.utils.exceptions import InvalidHTTPUrlContent
 
 from config import NOTIFY_URL, bug_id
 from handlers.users import remove_balance
@@ -18,6 +21,13 @@ class LavaWebhook(BaseModel):
     order_id: str
     status: str
     amount: float
+
+
+async def send_mj_photo(user_id, photo_url, kb):
+    response = requests.get(photo_url)
+    img = BytesIO(response.content)
+    await bot.send_photo(user_id, photo=img,
+                         reply_markup=kb)
 
 
 async def add_balance(user_id, amount):
@@ -71,11 +81,8 @@ async def get_midjourney(request: Request):
             await bot.send_message(bug_id, data)
             await bot.send_message(user_id, "Произошла ошибка, повторите попытку позже")
         return
-    response = requests.get(photo_url)
-    img = BytesIO(response.content)
-    await bot.send_photo(user["user_id"], photo=img,
-                         reply_markup=user_kb.get_try_prompt_or_choose(data["buttonMessageId"], "main",
-                                                                       include_try=True))
+    await send_mj_photo(user_id, photo_url, user_kb.get_try_prompt_or_choose(data["buttonMessageId"], "main",
+                                                                             include_try=True))
     if user["free_image"] > 0:
         await db.remove_image(user["user_id"])
     else:
@@ -88,17 +95,16 @@ async def get_midjourney_choose(request: Request):
     data = await request.json()
     user_id = int(data["ref"])
     photo_url = data["imageUrl"]
-    await bot.send_photo(user_id, photo_url, reply_markup=user_kb.get_choose(data["buttonMessageId"]))
+    await send_mj_photo(user_id, photo_url, user_kb.get_choose(data["buttonMessageId"]))
 
 
 @app.post('/api/midjourney/button')
 async def get_midjourney_button(request: Request):
+    await asyncio.sleep(1)
     data = await request.json()
     user_id = int(data["ref"])
     photo_url = data["imageUrl"]
-    await bot.send_photo(user_id, photo_url,
-                         reply_markup=user_kb.get_try_prompt_or_choose(data["buttonMessageId"], "main"))
-
+    await send_mj_photo(user_id, photo_url, user_kb.get_try_prompt_or_choose(data["buttonMessageId"], "main"))
     user = await db.get_user(user_id)
     if user["free_image"] > 0:
         await db.remove_image(user["user_id"])
