@@ -62,11 +62,16 @@ async def get_midjourney(request: Request):
     send_error_msg = False
     if photo_url == '':
         if "content" in data:
+            send_error_msg = True
             if data["content"] == "Request cancelled due to image filters":
                 await bot.send_message(user["user_id"], "Данное фото не прошло фильтры, попробуйте другое")
-                send_error_msg = True
+            elif data["content"] == "INVALID_PARAMETER":
+                await bot.send_message(user["user_id"], "Произошла ошибка, повторите попытку позже")
+            else:
+                send_error_msg = False
         if not send_error_msg:
             await bot.send_message(bug_id, data)
+            await bot.send_message(user_id, "Произошла ошибка, повторите попытку позже")
         return
     response = requests.get(photo_url)
     img = BytesIO(response.content)

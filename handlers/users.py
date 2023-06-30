@@ -312,7 +312,8 @@ async def clear_content(call: CallbackQuery, state: FSMContext):
 async def try_prompt(call: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     if "prompt" not in data:
-        return await call.message.answer("Попробуйте заново ввести запрос")
+        await call.message.answer("Попробуйте заново ввести запрос")
+        return await call.answer()
     await call.answer()
 
     user = await db.get_user(call.from_user.id)
@@ -354,6 +355,7 @@ async def photo_imagine(message: Message, state: FSMContext):
     if ds_photo_url == "error":
         await message.answer("Генерация с фото недоступна, повторите попытку позже")
         await message.bot.send_message(bug_id, "Необходимо заменить api ключ фотохостинга")
+        return
     prompt = ds_photo_url + " " + message.caption
     await state.update_data(prompt=prompt)
     await get_mj(prompt, message.from_user.id, message.bot)
