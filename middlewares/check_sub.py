@@ -5,7 +5,6 @@ from aiogram.utils.exceptions import ChatNotFound
 
 from keyboards import user as user_kb
 from config import channel_id, ADMINS
-from create_bot import bot
 
 
 class CheckRegMiddleware(BaseMiddleware):
@@ -23,15 +22,15 @@ class CheckRegMiddleware(BaseMiddleware):
         except AttributeError:
             pass
         try:
-            status: ChatMember = await bot.get_chat_member(channel_id, user_id)
+            status: ChatMember = await update.bot.get_chat_member(channel_id, user_id)
             if status.status == "left":
                 if update.callback_query:
                     await update.callback_query.answer("Необходимо вступить в канал")
                 else:
-                    await bot.send_message(user_id, "Для продолжения подпишитесь на наш канал",
+                    await update.bot.send_message(user_id, "Для продолжения подпишитесь на наш канал",
                                            reply_markup=user_kb.partner)
 
                 raise CancelHandler()
         except ChatNotFound as e:
             print(e)
-            await bot.send_message(ADMINS[0], "Проблема с каналом партнером")
+            await update.bot.send_message(ADMINS[0], "Проблема с каналом партнером")

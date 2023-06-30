@@ -7,6 +7,9 @@ from aiogram import Bot
 from config import TOKEN, log_on
 from config import ADMINS
 from typing import Union
+
+from middlewares.album import AlbumMiddleware
+from middlewares.check_sub import CheckRegMiddleware
 from utils import db
 import logging
 
@@ -43,4 +46,6 @@ class IsAdminFilter(BoundFilter):
         return self.global_admin is False
 
 
+dp.middleware.setup(CheckRegMiddleware())
+dp.middleware.setup(AlbumMiddleware())
 dp.filters_factory.bind(IsAdminFilter)

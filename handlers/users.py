@@ -1,8 +1,9 @@
 from datetime import datetime
+from typing import List
 
 import requests
 from aiogram import Bot
-from aiogram.types import Message, CallbackQuery, ChatActions
+from aiogram.types import Message, CallbackQuery, ChatActions, ContentType
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 
@@ -373,7 +374,7 @@ async def gen_prompt(message: Message, state: FSMContext):
         await get_mj(message.text, message.from_user.id, message.bot)
 
 
-@dp.message_handler(content_types="photo")
+@dp.message_handler(is_media_group=False, content_types="photo")
 async def photo_imagine(message: Message, state: FSMContext):
     if message.caption is None:
         await message.answer("Добавьте описание к фотографии")
@@ -386,5 +387,24 @@ async def photo_imagine(message: Message, state: FSMContext):
         await message.bot.send_message(bug_id, "Необходимо заменить api ключ фотохостинга")
         return
     prompt = ds_photo_url + " " + message.caption
+    await state.update_data(prompt=prompt)
+    await get_mj(prompt, message.from_user.id, message.bot)
+
+
+@dp.message_handler(is_media_group=True, content_types=ContentType.ANY)
+async def handle_albums(message: Message, album: List[Message], state: FSMContext):
+    """This handler will receive a complete album of any type."""
+    if len(album) != 2 or not (album[0].photo and album[1].photo):
+        return await message.answer("Пришлите два фото, чтобы их склеить")
+
+    file = await album[0].photo[-1].get_file()
+    photo_url = f"https://api.telegram.org/file/bot{TOKEN}/{file.file_path}"
+    ds_photo_url1 = await more_api.upload_photo_to_host(photo_url)
+
+    file = await album[1].photo[-1].get_file()
+    photo_url = f"https://api.telegram.org/file/bot{TOKEN}/{file.file_path}"
+    ds_photo_url2 = await more_api.upload_photo_to_host(photo_url)
+
+    prompt = f"{ds_photo_url1} {ds_photo_url2}"
     await state.update_data(prompt=prompt)
     await get_mj(prompt, message.from_user.id, message.bot)
