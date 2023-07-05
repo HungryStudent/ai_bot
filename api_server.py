@@ -69,12 +69,17 @@ async def get_midjourney(request: Request):
     user = await db.get_user(user_id)
     send_error_msg = False
     if photo_url == '':
+        msg_text = "Произошла ошибка, повторите попытку позже"
         if "content" in data:
             send_error_msg = True
             if data["content"] == "Request cancelled due to image filters":
                 await bot.send_message(user["user_id"], "Данное фото не прошло фильтры, попробуйте другое")
             elif data["content"] == "INVALID_PARAMETER":
                 await bot.send_message(user["user_id"], "Произошла ошибка, повторите попытку позже")
+            elif data["content"] == "Credits exhausted":
+                await bot.send_message(user["user_id"], "Произошла ошибка, повторите попытку позже")
+            elif data["content"] == "BANNED_PROMPT":
+                await bot.send_message(user["user_id"], "Ваш запрос не прошел фильтры, попробуйте другой")
             else:
                 send_error_msg = False
         if not send_error_msg:
