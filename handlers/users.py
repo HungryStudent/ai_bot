@@ -290,6 +290,10 @@ async def cancel(message: Message, state: FSMContext):
 @dp.callback_query_handler(Text(startswith="choose_image:"))
 async def choose_image(call: CallbackQuery):
     await call.answer()
+    user = await db.get_user(call.from_user.id)
+    if user["balance"] < 10 and user["free_image"] == 0:
+        await not_enough_balance(call.bot, call.from_user.id)
+        return
     buttonMessageId = call.data.split(":")[1]
     image_id = int(call.data.split(":")[2])
     mj_api = call.data.split(":")[3]
@@ -306,6 +310,10 @@ async def choose_image(call: CallbackQuery):
 @dp.callback_query_handler(Text(startswith="change_image:"))
 async def change_image(call: CallbackQuery):
     await call.answer()
+    user = await db.get_user(call.from_user.id)
+    if user["balance"] < 10 and user["free_image"] == 0:
+        await not_enough_balance(call.bot, call.from_user.id)
+        return
     buttonMessageId = call.data.split(":")[3]
     button_type = call.data.split(":")[1]
     value = call.data.split(":")[2]

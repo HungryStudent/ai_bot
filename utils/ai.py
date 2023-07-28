@@ -49,7 +49,7 @@ async def get_gpt(messages):
     try:
         response = await openai.ChatCompletion.acreate(model="gpt-3.5-turbo",
                                                        messages=messages[-10:])
-    except openai.error.ServiceUnavailableError:
+    except (openai.error.ServiceUnavailableError, openai.error.APIError):
         status = False
         content = "Генерация текста временно недоступна, повторите запрос позднее"
     if status:

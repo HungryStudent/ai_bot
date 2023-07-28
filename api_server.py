@@ -101,6 +101,8 @@ async def get_midjourney_choose(request: Request):
     user_id = int(data["ref"])
     photo_url = data["imageUrl"]
     await send_mj_photo(user_id, photo_url, user_kb.get_choose(data["buttonMessageId"]))
+    await remove_balance(bot, user_id)
+    await db.add_action(user_id, "image_choose")
 
 
 @app.post('/api/midjourney/button')
