@@ -90,6 +90,7 @@ async def get_midjourney(request: Request):
         return
     await send_mj_photo(user_id, photo_url, user_kb.get_try_prompt_or_choose(data["buttonMessageId"], "main",
                                                                              include_try=True))
+    await db.set_action_get_response(action_id)
     if user["free_image"] > 0:
         await db.remove_image(user["user_id"])
     else:
@@ -104,6 +105,7 @@ async def get_midjourney_choose(request: Request):
     user_id = action["user_id"]
     photo_url = data["imageUrl"]
     await send_mj_photo(user_id, photo_url, user_kb.get_choose(data["buttonMessageId"]))
+    await db.set_action_get_response(action_id)
     await remove_balance(bot, user_id)
 
 
