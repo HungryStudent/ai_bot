@@ -40,7 +40,7 @@ def init_scheduler():
 
 @app.post('/action/{action_id}')
 async def create_action_notify_request(action_id: int):
-    run_date = datetime.now() + timedelta(seconds=5)
+    run_date = datetime.now() + timedelta(minutes=5)
     try:
         scheduler.add_job(action_notify, "date", run_date=run_date, args=[action_id], id=str(action_id))
     except ConflictingIdError:
