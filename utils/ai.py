@@ -4,7 +4,7 @@ from aiogram import Bot
 from midjourney_api import TNL
 from googletranslatepy import Translator
 
-from config import OPENAPI_TOKEN, midjourney_webhook_url, MJ_API_KEY, TNL_API_KEY, TOKEN
+from config import OPENAPI_TOKEN, midjourney_webhook_url, MJ_API_KEY, TNL_API_KEY, TOKEN, NOTIFY_URL
 from utils import db
 
 tnl = TNL(TNL_API_KEY)
@@ -15,6 +15,7 @@ openai.log = "error"
 
 async def add_mj_action(user_id, action_type):
     action_id = await db.add_action(user_id, action_type)
+    requests.post(NOTIFY_URL + f"/action/{action_id}")
     return action_id
 
 

@@ -26,9 +26,26 @@ async def stock_notify(user_id):
     await db.update_new_stock_time(user_id, int(datetime.now().timestamp()))
 
 
+async def action_notify(action_id):
+    action = await db.get_action(action_id)
+    if not action["get_response"]:
+        await bot.send_message(action["user_id"],
+                               "⚠️Произошла какая-то ошибка, попробуйте другой запрос.", )
+
+
 @app.on_event('startup')
 def init_scheduler():
     scheduler.start()
+
+
+@app.post('/action/{action_id}')
+async def create_action_notify_request(action_id: int):
+    run_date = datetime.now() + timedelta(seconds=5)
+    try:
+        scheduler.add_job(action_notify, "date", run_date=run_date, args=[action_id], id=str(action_id))
+    except ConflictingIdError:
+        scheduler.remove_job(str(action_id))
+        scheduler.add_job(action_notify, "date", run_date=run_date, args=[action_id], id=str(action_id))
 
 
 @app.post('/stock/{user_id}')
