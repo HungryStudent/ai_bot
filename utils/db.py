@@ -178,7 +178,7 @@ async def get_all_inviters():
 
 async def add_action(user_id, ai_type):
     conn: Connection = await get_conn()
-    action_id = await conn.execute("INSERT INTO usage(user_id, ai_type, use_time) VALUES ($1, $2, $3) RETURNING id",
+    action_id = await conn.fetchrow("INSERT INTO usage(user_id, ai_type, use_time) VALUES ($1, $2, $3) RETURNING id",
                                    user_id, ai_type, int(datetime.now().timestamp()))
     await conn.close()
     return action_id
