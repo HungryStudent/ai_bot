@@ -5,11 +5,17 @@ from midjourney_api import TNL
 from googletranslatepy import Translator
 
 from config import OPENAPI_TOKEN, midjourney_webhook_url, MJ_API_KEY, TNL_API_KEY, TOKEN
+from utils import db
 
 tnl = TNL(TNL_API_KEY)
 
 openai.api_key = OPENAPI_TOKEN
 openai.log = "error"
+
+
+async def add_mj_action(user_id, action_type):
+    action_id = await db.add_action(user_id, action_type)
+    return action_id
 
 
 async def send_error(text):
@@ -59,8 +65,9 @@ async def get_gpt(messages):
 
 async def get_mdjrny(prompt, user_id):
     translated_prompt = await get_translate(prompt)
+    action_id = await add_mj_action(user_id, "image")
     try:
-        res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url, ref=user_id)
+        res = tnl.imagine(translated_prompt, webhook_override=midjourney_webhook_url, ref=action_id)
         if "success" not in res or not res["success"]:
             if "isNaughty" in res:
                 return {"status": False, "mj_api": "main", "error": "isNaughty error",
@@ -84,7 +91,6 @@ async def get_mdjrny(prompt, user_id):
             error = res["error"]
         else:
             task_id = res["task_id"]
-
     return {"status": status, "mj_api": mj_api, "error": error, "task_id": task_id}
     #
     # headers = {
@@ -104,9 +110,10 @@ async def get_mdjrny(prompt, user_id):
 
 
 async def get_choose_mdjrny(buttonMessageId, image_id, user_id, mj_api):
+    action_id = await add_mj_action(user_id, "image_chos")
     if mj_api == "main":
         try:
-            res = tnl.button(f"U{image_id}", buttonMessageId, ref=user_id,
+            res = tnl.button(f"U{image_id}", buttonMessageId, ref=action_id,
                              webhook_override=midjourney_webhook_url + "/choose")
             return {"status": True}
         except requests.exceptions.JSONDecodeError:
@@ -125,7 +132,6 @@ async def get_choose_mdjrny(buttonMessageId, image_id, user_id, mj_api):
         if "errors" in data:
             pass
             return {"status": False, "error": {}}
-
         return {"status": True, "image_url": data["imageURL"]}
     #
     # headers = {
@@ -144,9 +150,10 @@ async def get_choose_mdjrny(buttonMessageId, image_id, user_id, mj_api):
 
 
 async def press_mj_button(button, buttonMessageId, user_id):
+    action_id = await add_mj_action(user_id, "image_btn")
     status = True
     try:
-        res = tnl.button(button, buttonMessageId, ref=user_id,
+        res = tnl.button(button, buttonMessageId, ref=action_id,
                          webhook_override=midjourney_webhook_url + "/button")
     except requests.exceptions.JSONDecodeError:
         status = False

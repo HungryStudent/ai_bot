@@ -29,7 +29,8 @@ async def start():
     await conn.execute("CREATE TABLE IF NOT EXISTS orders(id SERIAL PRIMARY KEY, user_id BIGINT, amount INT, stock INT,"
                        "pay_time INT)")
     await conn.execute(
-        "CREATE TABLE IF NOT EXISTS usage(id SERIAL PRIMARY KEY, user_id BIGINT, ai_type VARCHAR(10), use_time INT)")
+        "CREATE TABLE IF NOT EXISTS usage(id SERIAL PRIMARY KEY, user_id BIGINT, ai_type VARCHAR(10), use_time INT,"
+        "get_response BOOLEAN DEFAULT FALSE)")
     await conn.execute(
         "CREATE TABLE IF NOT EXISTS withdraws(id SERIAL PRIMARY KEY, user_id BIGINT, amount INT, withdraw_time INT)")
     await conn.execute("CREATE TABLE IF NOT EXISTS config(config_key VARCHAR(32), config_value VARCHAR(256))")
@@ -177,8 +178,22 @@ async def get_all_inviters():
 
 async def add_action(user_id, ai_type):
     conn: Connection = await get_conn()
-    await conn.execute("INSERT INTO usage(user_id, ai_type, use_time) VALUES ($1, $2, $3)",
-                       user_id, ai_type, int(datetime.now().timestamp()))
+    action_id = await conn.execute("INSERT INTO usage(user_id, ai_type, use_time) VALUES ($1, $2, $3) RETURNING id",
+                                   user_id, ai_type, int(datetime.now().timestamp()))
+    await conn.close()
+    return action_id
+
+
+async def get_action(action_id):
+    conn: Connection = await get_conn()
+    row = await conn.fetchrow("SELECT * FROM usage WHERE id = $1", action_id)
+    await conn.close()
+    return row
+
+
+async def set_action_get_response(usage_id):
+    conn: Connection = await get_conn()
+    await conn.execute("UPDATE usage SET get_response = TRUE WHERE id = $1", usage_id)
     await conn.close()
 
 

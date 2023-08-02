@@ -65,7 +65,9 @@ async def check_pay_freekassa(data: LavaWebhook):
 async def get_midjourney(request: Request):
     data = await request.json()
     photo_url = data["imageUrl"]
-    user_id = int(data["ref"])
+    action_id = int(data["ref"])
+    action = await db.get_action(action_id)
+    user_id = action["user_id"]
     user = await db.get_user(user_id)
     send_error_msg = False
     if photo_url == '':
@@ -92,32 +94,34 @@ async def get_midjourney(request: Request):
         await db.remove_image(user["user_id"])
     else:
         await remove_balance(bot, user["user_id"])
-    await db.add_action(user["user_id"], "image")
 
 
 @app.post('/api/midjourney/choose')
 async def get_midjourney_choose(request: Request):
     data = await request.json()
-    user_id = int(data["ref"])
+    action_id = int(data["ref"])
+    action = await db.get_action(action_id)
+    user_id = action["user_id"]
     photo_url = data["imageUrl"]
     await send_mj_photo(user_id, photo_url, user_kb.get_choose(data["buttonMessageId"]))
     await remove_balance(bot, user_id)
-    await db.add_action(user_id, "image_chos")
 
 
 @app.post('/api/midjourney/button')
 async def get_midjourney_button(request: Request):
     await asyncio.sleep(1)
     data = await request.json()
-    user_id = int(data["ref"])
+    action_id = int(data["ref"])
+    action = await db.get_action(action_id)
+    user_id = action["user_id"]
     photo_url = data["imageUrl"]
     await send_mj_photo(user_id, photo_url, user_kb.get_try_prompt_or_choose(data["buttonMessageId"], "main"))
     user = await db.get_user(user_id)
+    await db.set_action_get_response(action_id)
     if user["free_image"] > 0:
         await db.remove_image(user["user_id"])
     else:
         await remove_balance(bot, user["user_id"])
-    await db.add_action(user["user_id"], "image_btn")
 
 
 @app.post('/api/midjourney_reserve')
@@ -148,7 +152,6 @@ async def get_midjourney(user_id: int, request: Request):
         await db.remove_image(user_id)
     else:
         await remove_balance(bot, user_id)
-    await db.add_action(user_id, "image")
 
 
 if __name__ == "__main__":
