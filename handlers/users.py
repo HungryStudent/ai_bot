@@ -390,7 +390,7 @@ async def photo_imagine(message: Message, state: FSMContext):
     file = await message.photo[-1].get_file()
     file_name = str(message.from_user.id) + "." + file.file_path.split(".")[-1]
     print(file_name)
-    await file.download(destination_dir=PHOTO_PATH + file_name)
+    await file.download(destination_file=PHOTO_PATH + file_name)
     photo_url = MJ_PHOTO_BASE_URL + file_name
     prompt = photo_url + " " + message.caption
     await state.update_data(prompt=prompt)
