@@ -10,7 +10,7 @@ from aiogram.dispatcher import FSMContext
 from utils import db, ai, more_api, pay
 from states import user as states
 import keyboards.user as user_kb
-from config import bot_url, TOKEN, NOTIFY_URL, bug_id
+from config import bot_url, TOKEN, NOTIFY_URL, bug_id, PHOTO_PATH, MJ_PHOTO_BASE_URL
 from create_bot import dp
 
 vary_types = {"subtle": "Subtle", "strong": "Strong"}
@@ -388,13 +388,11 @@ async def photo_imagine(message: Message, state: FSMContext):
         await message.answer("Добавьте описание к фотографии")
         return
     file = await message.photo[-1].get_file()
-    photo_url = f"https://api.telegram.org/file/bot{TOKEN}/{file.file_path}"
-    ds_photo_url = await more_api.upload_photo_to_host(photo_url)
-    if ds_photo_url == "error":
-        await message.answer("Генерация с фото недоступна, повторите попытку позже")
-        await message.bot.send_message(bug_id, "Необходимо заменить api ключ фотохостинга")
-        return
-    prompt = ds_photo_url + " " + message.caption
+    file_name = str(message.from_user.id) + "." + file.file_path.split(".")[-1]
+    print(file_name)
+    await file.download(destination_dir=PHOTO_PATH + file_name)
+    photo_url = MJ_PHOTO_BASE_URL + file_name
+    prompt = photo_url + " " + message.caption
     await state.update_data(prompt=prompt)
     await get_mj(prompt, message.from_user.id, message.bot)
 
@@ -406,13 +404,15 @@ async def handle_albums(message: Message, album: List[Message], state: FSMContex
         return await message.answer("Пришлите два фото, чтобы их склеить")
 
     file = await album[0].photo[-1].get_file()
-    photo_url = f"https://api.telegram.org/file/bot{TOKEN}/{file.file_path}"
-    ds_photo_url1 = await more_api.upload_photo_to_host(photo_url)
+    file_name = "1_" + str(message.from_user.id) + "." + file.file_path.split(".")[-1]
+    await file.download(destination_dir=PHOTO_PATH + file_name)
+    photo_url_1 = MJ_PHOTO_BASE_URL + file_name
 
     file = await album[1].photo[-1].get_file()
-    photo_url = f"https://api.telegram.org/file/bot{TOKEN}/{file.file_path}"
-    ds_photo_url2 = await more_api.upload_photo_to_host(photo_url)
+    file_name = "2_" + str(message.from_user.id) + "." + file.file_path.split(".")[-1]
+    await file.download(destination_dir=PHOTO_PATH + file_name)
+    photo_url_2 = MJ_PHOTO_BASE_URL + file_name
 
-    prompt = f"{ds_photo_url1} {ds_photo_url2}"
+    prompt = f"{photo_url_1} {photo_url_2}"
     await state.update_data(prompt=prompt)
     await get_mj(prompt, message.from_user.id, message.bot)
