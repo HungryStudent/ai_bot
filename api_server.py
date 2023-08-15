@@ -82,6 +82,8 @@ async def get_midjourney(request: Request):
                 await bot.send_message(user["user_id"], "Произошла ошибка, повторите попытку позже")
             elif data["content"] == "BANNED_PROMPT":
                 await bot.send_message(user["user_id"], "Ваш запрос не прошел фильтры, попробуйте другой")
+            elif data["content"] == "FAILED_TO_PROCESS_YOUR_COMMAND":
+                pass
             else:
                 send_error_msg = False
         if not send_error_msg:

@@ -110,7 +110,6 @@ async def start_message(message: Message, state: FSMContext):
     code = None
     if msg_args != ['']:
         for msg_arg in msg_args:
-            print(msg_arg)
             if msg_arg[0] == "r":
                 try:
                     inviter_id = int(msg_arg[1:])
@@ -389,7 +388,6 @@ async def photo_imagine(message: Message, state: FSMContext):
         return
     file = await message.photo[-1].get_file()
     file_name = str(message.from_user.id) + "." + file.file_path.split(".")[-1]
-    print(file_name)
     await file.download(destination_file=PHOTO_PATH + file_name)
     photo_url = MJ_PHOTO_BASE_URL + file_name
     prompt = photo_url + " " + message.caption
