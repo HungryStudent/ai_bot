@@ -254,7 +254,8 @@ async def gen_img(message: Message, state: FSMContext):
 async def select_amount(call: CallbackQuery):
     amount = int(call.data.split(":")[1])
     urls = {"lava": pay.get_pay_url_lava(call.from_user.id, amount),
-            "freekassa": pay.get_pay_url_freekassa(call.from_user.id, amount)}
+            "freekassa": pay.get_pay_url_freekassa(call.from_user.id, amount),
+            "payok": pay.get_pay_url_payok(call.from_user.id, amount)}
     await call.message.answer(f"""💰 Сумма: <b>{amount} рублей
 
 ♻️ Средства зачислятся автоматически</b>""", reply_markup=user_kb.get_pay_urls(urls))
@@ -272,7 +273,8 @@ async def create_other_order(message: Message, state: FSMContext):
         await message.answer("Минимальная сумма платежа 200 рублей")
     else:
         urls = {"lava": pay.get_pay_url_lava(message.from_user.id, amount),
-                "freekassa": pay.get_pay_url_freekassa(message.from_user.id, amount)}
+                "freekassa": pay.get_pay_url_freekassa(message.from_user.id, amount),
+                "payok": pay.get_pay_url_payok(call.from_user.id, amount)}
         await message.answer(f"""💰 Сумма: <b>{amount} рублей
 
 ♻️ Средства зачислятся автоматически</b>""", reply_markup=user_kb.get_pay_urls(urls))
@@ -403,12 +405,12 @@ async def handle_albums(message: Message, album: List[Message], state: FSMContex
 
     file = await album[0].photo[-1].get_file()
     file_name = "1_" + str(message.from_user.id) + "." + file.file_path.split(".")[-1]
-    await file.download(destination_dir=PHOTO_PATH + file_name)
+    await file.download(destination_file=PHOTO_PATH + file_name)
     photo_url_1 = MJ_PHOTO_BASE_URL + file_name
 
     file = await album[1].photo[-1].get_file()
     file_name = "2_" + str(message.from_user.id) + "." + file.file_path.split(".")[-1]
-    await file.download(destination_dir=PHOTO_PATH + file_name)
+    await file.download(destination_file=PHOTO_PATH + file_name)
     photo_url_2 = MJ_PHOTO_BASE_URL + file_name
 
     prompt = f"{photo_url_1} {photo_url_2}"

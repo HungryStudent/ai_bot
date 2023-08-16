@@ -2,10 +2,27 @@ import hashlib
 import hmac
 import json
 import random
+from urllib.parse import urlencode
 
 import requests
 
-from config import FreeKassa, LAVA_API_KEY, LAVA_SHOP_ID
+from config import FreeKassa, LAVA_API_KEY, LAVA_SHOP_ID, PayOK
+
+
+def get_pay_url_payok(user_id, amount):
+    payment = str(user_id) + "_" + str(random.randint(100000, 999999))
+    desc = "Пополнение баланса NeuronAgent"
+    currency = "RUB"
+    sign_string = '|'.join(
+        str(item) for item in
+        [amount, payment, PayOK.shop_id, currency, desc, PayOK.secret]
+    )
+    sign = hashlib.md5(sign_string.encode())
+
+    params = {"amount": amount, "payment": payment, "shop": PayOK.shop_id, "desc": desc, "currency": currency,
+              "sign": sign.hexdigest()}
+
+    return "https://payok.io/pay?" + urlencode(params)
 
 
 def get_pay_url_freekassa(user_id, amount):

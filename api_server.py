@@ -23,6 +23,11 @@ class LavaWebhook(BaseModel):
     amount: float
 
 
+class PayOKWebhook(BaseModel):
+    payment_id: str
+    amount: float
+
+
 async def send_mj_photo(user_id, photo_url, kb):
     response = requests.get(photo_url)
     img = BytesIO(response.content)
@@ -32,6 +37,8 @@ async def send_mj_photo(user_id, photo_url, kb):
 
 async def add_balance(user_id, amount):
     user = await db.get_user(user_id)
+    if user is None:
+        return
     stock = 0
     if not user["is_pay"] and int(datetime.now().timestamp()) - user["new_stock_time"] < 86400:
         stock = int(amount * 0.3)
@@ -57,6 +64,13 @@ async def check_pay_freekassa(data: LavaWebhook):
     if data.status != "success":
         raise HTTPException(200)
     user_id = int(data.order_id.split(":")[0])
+    await add_balance(user_id, int(data.amount))
+    raise HTTPException(200)
+
+
+@app.post('/api/pay/payok')
+async def check_pay_freekassa(data: PayOKWebhook):
+    user_id = int(data.payment_id.split("_")[0])
     await add_balance(user_id, int(data.amount))
     raise HTTPException(200)
 

@@ -78,8 +78,9 @@ def get_pay(user_id, stock=0):
 def get_pay_urls(urls):
     return InlineKeyboardMarkup(row_width=1).add(
         InlineKeyboardButton("Банковская карта", web_app=WebAppInfo(url=urls["lava"])),
-        InlineKeyboardButton("Криптовалюта", web_app=WebAppInfo(url=urls["freekassa"])),
-        InlineKeyboardButton("YooMoney", web_app=WebAppInfo(url=urls["freekassa"])),
+        InlineKeyboardButton("СБП(Переводом)", web_app=WebAppInfo(url=urls["freekassa"])),
+        InlineKeyboardButton("Криптовалюта", web_app=WebAppInfo(url=urls["payok"])),
+        InlineKeyboardButton("Другие способы", web_app=WebAppInfo(url=urls["freekassa"])),
         InlineKeyboardButton("🔙Назад", callback_data="back_to_choose_balance"))
 
 

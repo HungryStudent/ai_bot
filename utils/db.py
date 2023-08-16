@@ -65,7 +65,7 @@ async def get_user(user_id):
 async def add_user(user_id, username, first_name, inviter_id):
     conn: Connection = await get_conn()
     await conn.execute(
-        "INSERT INTO users(user_id, username, first_name, reg_time, inviter_id) VALUES ($1, $2, $3, $4, $5)",
+        "INSERT INTO users(user_id, username, first_name, reg_time, inviter_id, free_image) VALUES ($1, $2, $3, $4, $5, 1)",
         user_id, username, first_name, int(datetime.now().timestamp()), inviter_id)
     await conn.close()
 
@@ -179,7 +179,7 @@ async def get_all_inviters():
 async def add_action(user_id, ai_type):
     conn: Connection = await get_conn()
     action = await conn.fetchrow("INSERT INTO usage(user_id, ai_type, use_time) VALUES ($1, $2, $3) RETURNING id",
-                                   user_id, ai_type, int(datetime.now().timestamp()))
+                                 user_id, ai_type, int(datetime.now().timestamp()))
     await conn.close()
     return action["id"]
 
