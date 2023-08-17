@@ -1,12 +1,11 @@
 import asyncio
 from datetime import datetime
-
-from aiogram.utils.exceptions import InvalidHTTPUrlContent
+from typing import Annotated
 
 from config import NOTIFY_URL, bug_id
 from handlers.users import remove_balance
 from keyboards import user as user_kb
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Form
 from pydantic import BaseModel
 from create_bot import bot
 from io import BytesIO
@@ -69,9 +68,9 @@ async def check_pay_freekassa(data: LavaWebhook):
 
 
 @app.post('/api/pay/payok')
-async def check_pay_freekassa(data: PayOKWebhook):
-    user_id = int(data.payment_id.split("_")[0])
-    await add_balance(user_id, int(data.amount))
+async def check_pay_freekassa(payment_id: Annotated[str, Form()], amount: Annotated[str, Form()]):
+    user_id = int(payment_id.split("_")[0])
+    await add_balance(user_id, int(amount))
     raise HTTPException(200)
 
 
