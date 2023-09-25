@@ -32,6 +32,8 @@ async def send_mj_photo(user_id, photo_url, kb):
         response = requests.get(photo_url, timeout=5)
     except requests.exceptions.Timeout:
         img = photo_url
+    except requests.exceptions.ConnectionError:
+        img = photo_url
     else:
         img = BytesIO(response.content)
     await bot.send_photo(user_id, photo=img,
