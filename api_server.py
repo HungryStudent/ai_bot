@@ -28,8 +28,12 @@ class PayOKWebhook(BaseModel):
 
 
 async def send_mj_photo(user_id, photo_url, kb):
-    response = requests.get(photo_url)
-    img = BytesIO(response.content)
+    try:
+        response = requests.get(photo_url, timeout=5)
+    except requests.exceptions.Timeout:
+        img = photo_url
+    else:
+        img = BytesIO(response.content)
     await bot.send_photo(user_id, photo=img,
                          reply_markup=kb)
 
@@ -87,7 +91,7 @@ async def get_midjourney(request: Request):
         msg_text = "Произошла ошибка, повторите попытку позже"
         if "content" in data:
             send_error_msg = True
-            if data["content"] == "Request cancelled due to image filters":
+            if data["content"] == "Request cancelled due to image filters" or data["content"] == "IMAGE_BLOCKED":
                 await bot.send_message(user["user_id"], "Данное фото не прошло фильтры, попробуйте другое")
             elif data["content"] == "INVALID_PARAMETER":
                 await bot.send_message(user["user_id"], "Произошла ошибка, повторите попытку позже")
