@@ -106,7 +106,7 @@ def get_try_prompt_or_choose(buttonMessageId, mj_api, include_try=False):
 
 def get_choose(buttonMessageId):
     return InlineKeyboardMarkup(row_width=2).add(
-        InlineKeyboardButton("🪄 Vary (Subtle)", callback_data=f"change_image:vary:strong:{buttonMessageId}"),
-        InlineKeyboardButton("🪄 Vary (Strong)", callback_data=f"change_image:vary:subtle:{buttonMessageId}"),
+        InlineKeyboardButton("🪄 Vary (Subtle)", callback_data=f"change_image:vary:subtle:{buttonMessageId}"),
+        InlineKeyboardButton("🪄 Vary (Strong)", callback_data=f"change_image:vary:strong:{buttonMessageId}"),
         InlineKeyboardButton("🔍 Zoom Out 2x", callback_data=f"change_image:zoom:2:{buttonMessageId}"),
         InlineKeyboardButton("🔍 Zoom Out 1.5x", callback_data=f"change_image:zoom:1.5:{buttonMessageId}"))

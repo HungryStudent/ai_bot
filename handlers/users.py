@@ -121,13 +121,16 @@ async def start_message(message: Message, state: FSMContext):
                 code = msg_arg[1:]
 
     user = await db.get_user(message.from_user.id)
+
     if user is None:
         await db.add_user(message.from_user.id, message.from_user.username, message.from_user.first_name,
                           int(inviter_id))
-
+        default_ai = "chatgpt"
+    else:
+        default_ai = user["default_ai"]
     await message.answer("""<b>NeuronAgent</b>🤖 - <i>2 нейросети в одном месте!</i>
 
-<b>ChatGPT или Midjourney?</b>""", reply_markup=user_kb.get_menu("chatgpt"))
+<b>ChatGPT или Midjourney?</b>""", reply_markup=user_kb.get_menu(default_ai))
 
     if code is not None:
         await check_promocode(message.from_user.id, code, message.bot)
